@@ -27,7 +27,7 @@ class UserRequest extends \App\Foundation\FormRequest
             'name' => ['required', 'string', 'max:200'],
             'username' => ['required', 'string', 'max:40', Rule::unique('users')->ignore($userId)],
             'email' => ['required', 'string', 'max:200', 'email', Rule::unique('users')->ignore($userId)],
-            'country_code' => ['required', 'string', $this->countryValidationRules()],
+            'country_code' => ['nullable', 'string', $this->countryValidationRules()],
             'phone_number' => ['required', 'numeric', 'digits_between:10,14'],
             'role' => [
                 'required',

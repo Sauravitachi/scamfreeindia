@@ -13,7 +13,7 @@ class ScamAssigneeRecord extends Model
      *
      * @var null|string
      */
-    public const null|string UPDATED_AT = null;
+    public const UPDATED_AT = null;
 
     /**
      * The attributes that are mass assignable.

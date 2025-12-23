@@ -56,6 +56,7 @@ class User extends Authenticatable implements UserDetailTextContract
      *
      * @var array<int, string>
      */
+
     protected $hidden = [
         'password',
         'remember_token',

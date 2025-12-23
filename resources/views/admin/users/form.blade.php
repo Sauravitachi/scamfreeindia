@@ -25,10 +25,10 @@
                 required />
         </div>
 
-        <div class="col-lg-6">
+        {{-- <div class="col-lg-6">
             <x-admin.country-select2 name='country_code' label='Select Country' id="user-country-select"
                 :default="$user?->country_code ?? 'in'" required />
-        </div>
+        </div> --}}
 
         <div class="col-lg-6">
             <x-admin.input-group name='phone_number' id="phone_number" type='number' label="Phone Number"

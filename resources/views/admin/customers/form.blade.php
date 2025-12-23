@@ -26,10 +26,10 @@
             <x-admin.input name='email' label="Email Address" placeholder="Enter email address" :value="$customer?->email" />
         </div>
 
-        <div class="col-lg-3">
+        {{-- <div class="col-lg-3">
             <x-admin.country-select2 name='country_code' label='Select Country' id="customer-country-select"
                 :default="$customer?->country_code ?? 'in'" required />
-        </div>
+        </div> --}}
 
         <div class="col-lg-4">
             <x-admin.input-group name='phone_number' id="phone_number" type='number' label="Phone Number"

@@ -213,12 +213,12 @@ class ScamService extends Service
                     $assginee = User::find($assigneeId, ['name', 'username']);
                     $scam->logActivity(
                         "Assigned to {$type} member : {$assginee->name_with_username}",
-                        ScamActivityEvent::from(strtoupper("{$type}_assign"))
+                        ScamActivityEvent::from("{$type}_assign")
                     );
                 } else {
                     $scam->logActivity(
                         "Removed {$type} assignee",
-                        ScamActivityEvent::from(strtoupper("{$type}_assign"))
+                        ScamActivityEvent::from("{$type}_assign")
                     );
                 }
             }
@@ -230,12 +230,12 @@ class ScamService extends Service
                         $status = ScamStatus::find($statusId, ['title']);
                         $scam->logActivity(
                             ucfirst($type) . " status updated : {$status->title}",
-                            ScamActivityEvent::from(strtoupper("{$type}_status"))
+                            ScamActivityEvent::from("{$type}_status")
                         );
                     } else {
                         $scam->logActivity(
                             "Removed {$type} status",
-                            ScamActivityEvent::from(strtoupper("{$type}_status"))
+                            ScamActivityEvent::from("{$type}_status")
                         );
                     }
                 }
@@ -543,15 +543,16 @@ $permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEME
 
     public function resetScamStatus(Scam $scam, bool $save = false): void
     {
-        if ($scam->isDirty('sales_assignee_id') && $scam->sales_assignee_id && $scam->sales_status_id) {
-        $scam->sales_status_id = null;
-        $scam->logActivity('Removed sales status', ScamActivityEvent::from(strtoupper('sales_status')));
-    }
 
-    if ($scam->isDirty('drafting_assignee_id') && $scam->drafting_assignee_id && $scam->drafting_status_id) {
-        $scam->drafting_status_id = null;
-        $scam->logActivity('Removed drafting status', ScamActivityEvent::from(strtoupper('drafting_status')));
-    }
+        if ($scam->isDirty('sales_assignee_id') && $scam->sales_assignee_id && $scam->sales_status_id) {
+            $scam->sales_status_id = null;
+            $scam->logActivity('Removed sales status', ScamActivityEvent::from('sales_status'));
+        }
+
+        if ($scam->isDirty('drafting_assignee_id') && $scam->drafting_assignee_id && $scam->drafting_status_id) {
+            $scam->drafting_status_id = null;
+            $scam->logActivity('Removed drafting status', ScamActivityEvent::from('drafting_status'));
+        }
 
         if ($save) {
             $scam->save();
@@ -579,10 +580,11 @@ $permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEME
                 'status_type' => $status->type,
             ]);
 
-           $scam->logActivity(
-            "Removed {$statusType->value} assignee (Due to status update)",
-            ScamActivityEvent::from(strtoupper("{$statusType->value}_assign"))
-        );
+
+            $scam->logActivity(
+                "Removed {$statusType->value} assignee (Due to status update)",
+                ScamActivityEvent::from("{$statusType->value}_assign")
+            );
 
             $this->handleScamAssigneeUpdatedEvent(scam: $scam, unassignStatus: $status);
 

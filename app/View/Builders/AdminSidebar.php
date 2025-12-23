@@ -193,9 +193,9 @@ class AdminSidebar extends Sidebar
                 $this->addSubmenu(title: 'Pulse Monitor', url: route('pulse'));
             }
 
-            if ($this->user->can(Permission::TELESCOPE->value)) {
-                $this->addSubmenu(title: 'Telescope', url: route('telescope'));
-            }
+            // if ($this->user->can(Permission::TELESCOPE->value)) {
+            //     $this->addSubmenu(title: 'Telescope', url: route('telescope'));
+            // }
 
             if ($this->user->can(Permission::PHPINFO->value)) {
                 $this->addSubmenu(title: 'PHP Info', url: route('admin.server.phpinfo'));
