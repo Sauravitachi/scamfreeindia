@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -290,11 +291,12 @@ $permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEME
 
                     $assignee = User::find($assigneeId, 'id');
 
-                    // if($assignee) {
-                    //     Notification::sendNow($assignee, new CaseAssignedNotification($scam));
-                    // }
+                    if($assignee) {
+                        Notification::sendNow($assignee, new CaseAssignedNotification($scam));
+                        \Log::info("Notification sent to user ID: {$assignee->id} for Scam ID: {$scam->id}");
+                    }
                 }
-            }
+            };
 
             return false;
         });
