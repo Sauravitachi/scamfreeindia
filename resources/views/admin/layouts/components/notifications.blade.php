@@ -54,131 +54,148 @@
 </div>
 
 @pushonce('script')
-    <script>
-        $(document).ready(function() {
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-            const notificationIds = [];
+<script>
+$(document).ready(function () {
 
-            const limit = {{ NotificationService::NOTIFICATION_DROPDOWN_LIMIT }};
+    const limit = {{ NotificationService::NOTIFICATION_DROPDOWN_LIMIT }};
+    const intervalSeconds = {{ NotificationService::NOTIFICATION_DROPDOWN_REFRESH_INTERVAL_SECONDS }};
 
-            const intervalSeconds = {{ NotificationService::NOTIFICATION_DROPDOWN_REFRESH_INTERVAL_SECONDS }};
+    function toggleNotificationBadge(count) {
+        if (count > 0) {
+            $('.unread-notification-badge').text(count).show();
+        } else {
+            $('.unread-notification-badge').hide();
+        }
+    }
 
-            function toggleNotificationBadge(count) {
-                if(count > 0) {
-                    $('.unread-notification-badge').text(count);
-                    $('.unread-notification-badge').show();
-                } else {
-                    $('.unread-notification-badge').hide()
+    function updateNotificationCount() {
+        const url = "{{ route('admin.notifications.unread-notifications-count') }}";
+
+        $.get(url, function (res) {
+            const data = res.data || {};
+            const count = data.count ?? 0;
+            const latestNotification = data.latestNotification;
+
+            toggleNotificationBadge(count);
+
+            if (!latestNotification) return;
+
+            const localLatestId = localStorage.getItem('latest_notification_id');
+
+            if (localLatestId == latestNotification.id) return;
+
+            /* ================= SHOW TOAST ================= */
+            FFSound.notify();
+
+            new Notify({
+                status: 'info',
+                title: latestNotification.data.title,
+                text: latestNotification.data.message,
+                effect: 'slide',
+                speed: 300,
+                showIcon: true,
+                showCloseButton: true,
+                autoclose: true,
+                autotimeout: 10000,
+                type: 'outline',
+                position: 'right top'
+            });
+
+            /* ================= FIREWORKS ================= */
+if (latestNotification.data.type === 'fireworks') {
+    if (typeof confetti === 'function') {
+
+        const duration = 4 * 1000; // 4 seconds
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 10,
+                angle: 60,
+                spread: 80,
+                startVelocity: 60,
+                gravity: 0.9,
+                ticks: 300,
+                origin: { x: 0 }
+            });
+
+            confetti({
+                particleCount: 10,
+                angle: 120,
+                spread: 80,
+                startVelocity: 60,
+                gravity: 0.9,
+                ticks: 300,
+                origin: { x: 1 }
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        })();
+    }
+}
+
+
+            /* ================= SAVE LAST ID ================= */
+            localStorage.setItem('latest_notification_id', latestNotification.id);
+        });
+    }
+
+    function fetchNotifications() {
+        const url = "{{ route('admin.notifications.unread-notifications') }}";
+
+        const itemTemplate = $('.notification-item-container').html();
+        const seeMoreTemplate = $('.see-more-notifications-label-container').html();
+        const $listGroup = $('.notification-list-group');
+        const $title = $('.notification-list-title');
+        const fallbackUrl = "{{ route('admin.notifications.index') }}";
+
+        $.ajax({
+            url,
+            method: 'GET',
+            beforeSend() {
+                $listGroup.html(`<div class="d-flex justify-content-center my-5">${Loader.spinner}</div>`);
+            },
+            success(res) {
+                const count = res.data.count;
+                const notifications = res.data.notifications ?? [];
+
+                let html = '';
+
+                notifications.forEach(notification => {
+                    const link = notification.data.link
+                        ? notification.data.link + `?source=notification-${notification.id}`
+                        : fallbackUrl;
+
+                    html += itemTemplate
+                        .replace('{title}', notification.data.title)
+                        .replace('{message}', notification.data.message ?? '')
+                        .replace('{url}', link);
+                });
+
+                if (count > limit) {
+                    html += seeMoreTemplate;
                 }
+
+                $listGroup.html(html);
+
+                $title.html(
+                    notifications.length
+                        ? 'Recent Notifications'
+                        : `<i class="ti ti-bell-x me-1"></i> No Unread Notifications`
+                );
+
+                toggleNotificationBadge(count);
             }
+        });
+    }
 
-            function updateNotificationCount() {
-                const url = "{{ route('admin.notifications.unread-notifications-count') }}";
-                $.get(url, function(res) {
-                    const data = res.data;
-                    const count = data.count ?? 0;
-                    const latestNotification = data.latestNotification;
-                    toggleNotificationBadge(count);
+    setInterval(updateNotificationCount, intervalSeconds * 1000);
 
-                    if(latestNotification) {
-
-                        const localLatestnNotificationId =  localStorage.getItem('latest_notification_id');
-
-                        if(localLatestnNotificationId != latestNotification.id) {
-
-                            // notify
-                            FFSound.notify();
-
-                            new Notify ({
-                                status: 'info',
-                                title: latestNotification.data.title,
-                                text: latestNotification.data.message,
-                                effect: 'slide',
-                                speed: 300,
-                                showIcon: true,
-                                showCloseButton: true,
-                                autoclose: false,
-                                autotimeout: 10000,
-                                type: 'outline',
-                                position: 'right top'
-                            });
-
-                            localStorage.setItem('latest_notification_id', latestNotification.id);
-                        }
-
-                    }
-                });
-            }
-
-            function fetchNotifications() {
-                
-                const url = "{{ route('admin.notifications.unread-notifications') }}";
-
-                const itemTemplate = $('.notification-item-container').html();
-                const seeMoreNotificationTemplate = $('.see-more-notifications-label-container').html();
-                const $listGroup = $('.notification-list-group');
-                const $notificationListTitle = $('.notification-list-title');
-                const fallbackNotificationUrl = "{{ route('admin.notifications.index') }}";
-
-
-
-                $.ajax({
-                    url,
-                    method: 'GET',
-                    beforeSend: function() {
-                        $listGroup.empty();
-
-                        $listGroup.html(
-                            `<div class="d-flex justify-content-center my-5">${Loader.spinner}</div>`
-                        );
-
-                    },
-                    success: function(res) {
-
-                        const count = res.data.count;
-                        const notifications = res.data.notifications;
-
-                        const hasNotifications = notifications.length > 0;
-
-                        let html = '';
-
-                        notifications.forEach(function(notification) {
-
-                            const link = notification.data.link ? notification.data.link +
-                                `?source=notification-${notification.id}` : null;
-
-                            const notificationItem = itemTemplate
-                                .replace('{title}', notification.data.title)
-                                .replace('{message}', notification.data.message ?? '')
-                                .replace('{url}', link ?? fallbackNotificationUrl);
-
-                            html += notificationItem;
-
-                        });
-
-                        if (count > limit) {
-                            html += seeMoreNotificationTemplate;
-                        }
-
-                        $listGroup.html(html);
-
-                        $notificationListTitle.html(
-                            hasNotifications ? `Recent Notifications` :
-                            `<i class="ti ti-bell-x me-1"></i> No Unread Notifications`
-                        );
-
-                        toggleNotificationBadge(count);
-
-                    }
-                });
-
-            }
-
-
-            setInterval(updateNotificationCount, intervalSeconds * 1000);
-
-            $('.notification-dropdown-icon').on('click', fetchNotifications);
-
-        })
-    </script>
+    $('.notification-dropdown-icon').on('click', fetchNotifications);
+});
+</script>
 @endpushonce

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Escalation extends Model
 {
-    public const int BASE_TRACK_NUMBER = 100000;
+    public const BASE_TRACK_NUMBER = 100000;
 
     /**
      * The attributes that are mass assignable.

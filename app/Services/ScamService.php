@@ -269,7 +269,7 @@ class ScamService extends Service
             $assigneeId = $data['assignee_id'];
             $enquiryId = $data['enquiry_id'] ?? null;
 
-$permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEMENT');  // XYZ_MANAGEMENT
+            $permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEMENT');  // XYZ_MANAGEMENT
 
             if ($user->can($permission->value)) {
 

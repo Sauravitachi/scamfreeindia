@@ -11,7 +11,7 @@ use InvalidArgumentException;
  */
 class Toast
 {
-    private const array VALID_TYPES = ['success', 'warning', 'error'];
+    private const VALID_TYPES = ['success', 'warning', 'error'];
 
     /**
      * @param  string  $type  The type of the toast (success, warning, error).

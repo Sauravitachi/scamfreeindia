@@ -10,7 +10,7 @@ class UploadedFile extends Model
 {
     use SoftDeletes;
 
-    public const array PREVIEWABLE_MIMES = ['image/png', 'image/jpeg', 'image/jpg'];
+    public const  PREVIEWABLE_MIMES = ['image/png', 'image/jpeg', 'image/jpg'];
 
     /**
      * The attributes that are mass assignable.

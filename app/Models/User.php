@@ -160,12 +160,12 @@ class User extends Authenticatable implements UserDetailTextContract
         return User::where('username', $username)->first($columns);
     }
 
+
     public function getNameWithUsernameAttribute(): string
     {
         if (! $this->hasAllAttributes('name', 'username')) {
-            $this->refersh();
+            $this->refresh();
         }
-
         return "$this->name ($this->username)";
     }
 
@@ -182,15 +182,26 @@ class User extends Authenticatable implements UserDetailTextContract
     public function getUsernameWithRoleNameAttribute(): string
     {
         if (! $this->hasAllAttributes('username')) {
-            $this->refersh();
+            $this->refresh();
         }
         if (! isset($this->role->name)) {
             $this->load('roles:id,name');
         }
-
         $role = $this->roles?->first()?->name ?? 'Member';
-
         return "$this->username ($role)";
+    }
+
+    /**
+     * Check if all given attributes are set and not null on the model.
+     */
+    public function hasAllAttributes(string ...$attributes): bool
+    {
+        foreach ($attributes as $attribute) {
+            if (!array_key_exists($attribute, $this->attributes) || is_null($this->attributes[$attribute])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function getWhatsappNameAttribute(): ?string

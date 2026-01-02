@@ -47,6 +47,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 
 class ScamController extends \App\Foundation\Controller
 {
@@ -341,29 +342,29 @@ class ScamController extends \App\Foundation\Controller
         return $this->responseService->json(success: true, toast: ['type' => 'success', 'message' => 'Bulk assignment successful!']);
     }
 
-    public function processImportFile(ScamImportFileScanRequest $request): JsonResponse
-    {
-        try {
+    // public function processImportFile(ScamImportFileScanRequest $request): JsonResponse
+    // {
+    //     try {
 
-            $this->uploadedFileService->uploadFromRequest($request, 'file', FileDirectory::SCAM_IMPORT_FILES);
+    //         $this->uploadedFileService->uploadFromRequest($request, 'file', FileDirectory::SCAM_IMPORT_FILES);
 
-            $data = $this->service->scanScamSheet($request);
+    //         $data = $this->service->scanScamSheet($request);
 
-            return $this->responseService->json(
-                success: true,
-                data: $data,
-                toast: new Toast('success', 'File has been processed!')
-            );
+    //         return $this->responseService->json(
+    //             success: true,
+    //             data: $data,
+    //             toast: new Toast('success', 'File has been processed!')
+    //         );
 
-        } catch (ExcelFileValidationException $e) {
+    //     } catch (ExcelFileValidationException $e) {
 
-            return $this->responseService->json(success: false, toast: new Toast('error', $e->getMessage()));
+    //         return $this->responseService->json(success: false, toast: new Toast('error', $e->getMessage()));
 
-        } catch (\Exception $e) {
+    //     } catch (\Exception $e) {
 
-            throw $e;
-        }
-    }
+    //         throw $e;
+    //     }
+    // }
 
     public function import(ScamFileImportRequest $request, ImportScamRecords $action): JsonResponse
     {

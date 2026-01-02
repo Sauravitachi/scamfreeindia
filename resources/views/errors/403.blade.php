@@ -152,7 +152,7 @@
         <h1>Access to this page is restricted</h1>
         <p>Please check with the site admin if you believe this is a mistake.</p>
         <hr>
-        <p>Currently logged in as <strong>{{ auth()->user()->nameWithUsername }}</strong></p>
+        <p>Currently logged in as <strong>{{ auth()->user()?->nameWithUsername }}</strong></p>
         <div class="button-group">
             <!-- Go to Dashboard Button -->
 

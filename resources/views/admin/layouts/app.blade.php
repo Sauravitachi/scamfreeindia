@@ -26,8 +26,8 @@
     <link rel="stylesheet" href="{{ asset('assets/theme/style.css') . '?v=' . $assetsVersion }}">
     <link rel="stylesheet" href="{{ asset('assets/theme/loaders.css') . '?v=' . $assetsVersion }}">
 
-    {{-- <link rel="icon" href="{{ asset('assets/theme/img/favicon.ico') . '?v=' . $assetsVersion }}" --}}
-        {{-- type="image/x-icon"> --}}
+    <link rel="icon" href="{{ asset('assets/theme/img/favicon.ico') . '?v=' . $assetsVersion }}"
+        type="image/x-icon">
 
 
     <style>

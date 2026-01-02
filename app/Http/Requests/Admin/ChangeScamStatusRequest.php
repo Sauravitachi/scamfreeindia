@@ -38,6 +38,7 @@ class ChangeScamStatusRequest extends \App\Foundation\FormRequest
             'email' => ['nullable', 'string', 'max:250', 'email', Rule::unique('customers', 'email')->ignore($ignoreEmail, 'email')],
             'scam_amount' => ['nullable', 'numeric', 'min:1', 'max:999999999999'],
             'scam_type_id' => ['nullable', 'integer', Rule::exists('scam_types', 'id')],
+            'scam_registration_amount_id' => ['nullable', 'integer', Rule::exists('scam_registration_amounts', 'id')],
         ];
     }
 

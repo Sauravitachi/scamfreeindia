@@ -14,6 +14,7 @@ class ScamRegistration extends Model
      */
     protected $fillable = [
         'scam_id',
+        'scam_assigned_id',
         'scam_registration_amount_id',
         'causer_id',
         'caused_at',

@@ -121,4 +121,14 @@ class ScamStatus extends Model
     {
         return $this->hasMany(ScamStatusUpdateField::class, 'scam_status_id');
     }
+
+     public function isRegistered(): bool
+    {
+        return $this->slug === 'registered';
+    }
+
+    public static function registeredId(): ?int
+    {
+        return static::where('slug', 'registered')->value('id');
+    }
 }

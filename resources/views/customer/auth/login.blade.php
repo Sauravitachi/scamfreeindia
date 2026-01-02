@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{ asset('assets/theme/style.css') . '?v=' . $assetsVersion }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
     
-    {{-- <link rel="icon" href="{{ asset('assets/theme/img/favicon.ico') . '?v=' . $assetsVersion }}" type="image/x-icon"> --}}
+    <link rel="icon" href="{{ asset('assets/theme/img/favicon.ico') . '?v=' . $assetsVersion }}" type="image/x-icon">
     <style>
         @import url('https://rsms.me/inter/inter.css');
 

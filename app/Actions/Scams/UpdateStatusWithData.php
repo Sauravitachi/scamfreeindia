@@ -69,10 +69,11 @@ class UpdateStatusWithData
                 }
             }
 
+            $createdRegistration = null;
             if (($fieldName = ScamStatusFieldType::REGISTRATION_AMOUNT->name()) && $request->has($fieldName)) {
                 $scamRegistrationAmountIds = $request->validated($fieldName, []);
                 $scam->registrations()->delete();
-                if (! empty($scamRegistrationAmountIds)) {
+                if (!empty($scamRegistrationAmountIds)) {
                     $data = [];
                     foreach ($scamRegistrationAmountIds as $amountId) {
                         $data[] = [
@@ -85,14 +86,35 @@ class UpdateStatusWithData
                         ];
                     }
                     ScamRegistration::insert($data);
+                    // For notification, pick the first registration just created
+                    $createdRegistration = $scam->registrations()->latest('id')->first();
                 }
             }
+
 
             // Updating status
             $scamUpdate["{$scamStatus->type->value}_status_id"] = $scamStatus->id;
             $scam->fill($scamUpdate);
             ScamService::getInstance()->logScamActivityBeforeUpdate($scam);
             $scam->save();
+
+            // Registration notification logic (only if status is 'registered' and registration was created)
+            if ($scamStatus->slug === 'registered' && $createdRegistration) {
+                \DB::afterCommit(function () use ($createdRegistration) {
+                    $activeUsers = \App\Models\User::query()->where('status', 1)->get();
+                    foreach ($activeUsers as $user) {
+                        try {
+                            $user->notify(new \App\Notifications\ScamStatusRegisteredNotification($createdRegistration));
+                        } catch (\Throwable $e) {
+                            \Log::error('Failed to notify user for scam registration (UpdateStatusWithData)', [
+                                'user_id' => $user->id,
+                                'registration_id' => $createdRegistration->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                });
+            }
 
             if (! empty($statusRecordUpdate) && $scam->{"{$scamStatus->type->value}_status_id"}) {
                 /**
