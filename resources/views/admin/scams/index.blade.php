@@ -56,6 +56,14 @@
                 'class' => '__excel_import_btn',
             ]
             : null,
+        $pms->scam_excel_import
+            ? [
+                'label' => 'FB Excel',
+                'icon' => 'ti ti-file-download',
+                'variant' => 'outline-secondary',
+                'class' => '__fb_excel_import_btn',
+            ]
+            : null,
         $pms->scam_bulk_update
             ? [
                 'label' => 'Bulk Update',
@@ -184,6 +192,7 @@
         @include('admin.scams._escalation_list_modal')
         @include('admin.scams._status_update_data_modal')
         @include('admin.scams._scam_import_offcanvas')
+        @include('admin.scams._fb_excel_import_modal')
         @include('admin.escalations._chat_window')
         @include('admin.scams._scam_file_upload_modal')
         @include('admin.scams._scam_details_offcanvas')
