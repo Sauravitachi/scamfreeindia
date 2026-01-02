@@ -4,15 +4,14 @@ namespace App\Notifications;
 
 use App\Models\ScamRegistration;
 use App\Utilities\Structure;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+// use Illuminate\Bus\Queueable;
+// use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Queue\SerializesModels;
+// use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class ScamStatusRegisteredNotification extends Notification implements ShouldQueue
+class ScamStatusRegisteredNotification extends Notification
 {
-    use Queueable, SerializesModels;
 
     public function __construct(
         public ScamRegistration $registration

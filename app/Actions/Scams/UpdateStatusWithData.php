@@ -103,6 +103,17 @@ class UpdateStatusWithData
                 \DB::afterCommit(function () use ($createdRegistration) {
                     $activeUsers = \App\Models\User::query()->where('status', 1)->get();
                     foreach ($activeUsers as $user) {
+                        $alreadyNotified = $user->notifications()
+                            ->where('type', \App\Notifications\ScamStatusRegisteredNotification::class)
+                            ->where('data->registration_id', $createdRegistration->id)
+                            ->exists();
+                        if ($alreadyNotified) {
+                            \Log::info('ScamStatusRegisteredNotification already exists for user (UpdateStatusWithData)', [
+                                'user_id' => $user->id,
+                                'registration_id' => $createdRegistration->id,
+                            ]);
+                            continue;
+                        }
                         try {
                             $user->notify(new \App\Notifications\ScamStatusRegisteredNotification($createdRegistration));
                         } catch (\Throwable $e) {

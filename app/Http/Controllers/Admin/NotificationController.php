@@ -15,6 +15,19 @@ use Illuminate\View\View;
 class NotificationController extends \App\Foundation\Controller
 {
     /**
+     * Mark the latest unread notification as read for the current user.
+     */
+    public function markLatestNotificationAsRead(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $latestNotification = $user->unreadNotifications()->latest()->first();
+        if ($latestNotification) {
+            $latestNotification->markAsRead();
+        }
+        return $this->responseService->json(success: true);
+    }
+
+    /**
      * Constructor for NotificationController
      */
     public function __construct(

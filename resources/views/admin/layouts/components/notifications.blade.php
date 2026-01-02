@@ -83,12 +83,10 @@ $(document).ready(function () {
             if (!latestNotification) return;
 
             const localLatestId = localStorage.getItem('latest_notification_id');
-
             if (localLatestId == latestNotification.id) return;
 
-            /* ================= SHOW TOAST ================= */
+            // ================= SHOW TOAST =================
             FFSound.notify();
-
             new Notify({
                 status: 'info',
                 title: latestNotification.data.title,
@@ -103,43 +101,47 @@ $(document).ready(function () {
                 position: 'right top'
             });
 
-            /* ================= FIREWORKS ================= */
-if (latestNotification.data.type === 'fireworks') {
-    if (typeof confetti === 'function') {
-
-        const duration = 4 * 1000; // 4 seconds
-        const end = Date.now() + duration;
-
-        (function frame() {
-            confetti({
-                particleCount: 10,
-                angle: 60,
-                spread: 80,
-                startVelocity: 60,
-                gravity: 0.9,
-                ticks: 300,
-                origin: { x: 0 }
-            });
-
-            confetti({
-                particleCount: 10,
-                angle: 120,
-                spread: 80,
-                startVelocity: 60,
-                gravity: 0.9,
-                ticks: 300,
-                origin: { x: 1 }
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
+            // ================= FIREWORKS =================
+            if (latestNotification.data.type === 'fireworks') {
+                if (typeof confetti === 'function') {
+                    const duration = 4 * 1000; // 4 seconds
+                    const end = Date.now() + duration;
+                    (function frame() {
+                        confetti({
+                            particleCount: 10,
+                            angle: 60,
+                            spread: 80,
+                            startVelocity: 60,
+                            gravity: 0.9,
+                            ticks: 300,
+                            origin: { x: 0 }
+                        });
+                        confetti({
+                            particleCount: 10,
+                            angle: 120,
+                            spread: 80,
+                            startVelocity: 60,
+                            gravity: 0.9,
+                            ticks: 300,
+                            origin: { x: 1 }
+                        });
+                        if (Date.now() < end) {
+                            requestAnimationFrame(frame);
+                        }
+                    })();
+                }
             }
-        })();
-    }
-}
 
+            // ================= MARK AS READ =================
+            fetch("{{ route('admin.notifications.mark-latest-read') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="_token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            });
 
-            /* ================= SAVE LAST ID ================= */
+            // ================= SAVE LAST ID =================
             localStorage.setItem('latest_notification_id', latestNotification.id);
         });
     }
