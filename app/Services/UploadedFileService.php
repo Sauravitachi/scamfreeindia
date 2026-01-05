@@ -38,7 +38,7 @@ class UploadedFileService extends Service
             $path .= "/$directory";
         }
 
-        $filePath = $file->store($path);
+        $filePath = $file->store($path, 'public');
 
         return $filePath;
     }
