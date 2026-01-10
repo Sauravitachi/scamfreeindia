@@ -78,6 +78,7 @@ $(document).ready(function () {
             const count = data.count ?? 0;
             const latestNotification = data.latestNotification;
 
+
             toggleNotificationBadge(count);
 
             if (!latestNotification) return;
@@ -86,7 +87,12 @@ $(document).ready(function () {
             if (localLatestId == latestNotification.id) return;
 
             // ================= SHOW TOAST =================
-            FFSound.notify();
+            // Play sound only for ScamStatusRegisteredNotification (type: 'fireworks')
+            if (latestNotification.data.type === 'fireworks') {
+                FFSound.notify(FFSound.urls.cashierUrl);
+            } else {
+                FFSound.notify();
+            }
             new Notify({
                 status: 'info',
                 title: latestNotification.data.title,
@@ -98,7 +104,8 @@ $(document).ready(function () {
                 autoclose: true,
                 autotimeout: 10000,
                 type: 'outline',
-                position: 'right top'
+                position: 'right top',
+                sound: FFSound.urls.cashierUrl
             });
 
             // ================= FIREWORKS =================

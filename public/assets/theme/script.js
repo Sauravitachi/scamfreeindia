@@ -43,17 +43,24 @@ const Loader = {
 };
 
 const FFSound = {
+    urls: {},
     register: function (options) {
-
         options.notificationUrl && (FFSound.notificationAudio = new Audio(options.notificationUrl));
         options.clickUrl && (FFSound.clickAudio = new Audio(options.clickUrl));
-
+        options.cashierUrl && (FFSound.cashierAudio = new Audio(options.cashierUrl));
+        FFSound.urls = options; // Store all URLs for reference
     },
-    notify: function () {
-        FFSound.notificationAudio.play();
+    notify: function (url) {
+        if (url && url === FFSound.urls.cashierUrl && FFSound.cashierAudio) {
+            FFSound.cashierAudio.currentTime = 0;
+            FFSound.cashierAudio.play();
+        } else if (FFSound.notificationAudio) {
+            FFSound.notificationAudio.currentTime = 0;
+            FFSound.notificationAudio.play();
+        }
     },
     click: function () {
-        FFSound.clickAudio.play();
+        FFSound.clickAudio && FFSound.clickAudio.play();
     }
 }
 
