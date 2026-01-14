@@ -15,48 +15,59 @@ class AssignedRoleSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $arshpreet = User::factory()->create([
-            'name' => 'Arshpreet',
-            'email' => 'sfi.arshpreet@gmail.com',
-            'username' => 'arshpreet',
-            'country_code' => '+91',
-            'phone_number' => '9999999999',
-            'password' => 'password', 
-            'status' => true,
-        ]);
-        $arshpreet->assignRole('Sales Executive');
+        // $arshpreet = User::factory()->create([
+        //     'name' => 'Arshpreet',
+        //     'email' => 'sfi.arshpreet@gmail.com',
+        //     'username' => 'arshpreet',
+        //     'country_code' => '+91',
+        //     'phone_number' => '9999999999',
+        //     'password' => 'password', 
+        //     'status' => true,
+        // ]);
+        // $arshpreet->assignRole('Sales Executive');
 
-        $jatin = User::factory()->create([
-            'name' => 'Jatin',
-            'email' => 'sfi.jatin@gmail.com',
-            'username' => 'jatin',
-            'country_code' => '+91',
-            'phone_number' => '8888888888',
-            'password' => 'password',
-            'status' => true,
-        ]);
-        $jatin->assignRole('Drafting Executive');
+        // $jatin = User::factory()->create([
+        //     'name' => 'Jatin',
+        //     'email' => 'sfi.jatin@gmail.com',
+        //     'username' => 'jatin',
+        //     'country_code' => '+91',
+        //     'phone_number' => '8888888888',
+        //     'password' => 'password',
+        //     'status' => true,
+        // ]);
+        // $jatin->assignRole('Drafting Executive');
 
-        $dheeraj = User::factory()->create([
-            'name' => 'Dheeraj',
-            'email' => 'sfi.dheeraj@gmail.com',
-            'username' => 'dheeraj',
-            'country_code' => '+91',
-            'phone_number' => '7777777777',
-            'password' => 'password',
-            'status' => true,
-        ]);
-        $dheeraj->assignRole('Service Executive');
+        // $dheeraj = User::factory()->create([
+        //     'name' => 'Dheeraj',
+        //     'email' => 'sfi.dheeraj@gmail.com',
+        //     'username' => 'dheeraj',
+        //     'country_code' => '+91',
+        //     'phone_number' => '7777777777',
+        //     'password' => 'password',
+        //     'status' => true,
+        // ]);
+        // $dheeraj->assignRole('Service Executive');
 
-        $schain = User::factory()->create([
-            'name' => 'Schain',
-            'email' => 'sfi.schain@gmail.com',
-            'username' => 'schain',
+        // $schain = User::factory()->create([
+        //     'name' => 'Schain',
+        //     'email' => 'sfi.schain@gmail.com',
+        //     'username' => 'schain',
+        //     'country_code' => '+91',
+        //     'phone_number' => '6666666666',
+        //     'password' => 'password',
+        //     'status' => true,
+        // ]);
+        // $schain->assignRole('MIS');
+
+        $ankitsales = User::factory()->create([
+            'name' => 'Ankit Sales',
+            'email' => 'sfi.ankitsales@gmail.com',
+            'username' => 'ankitsales',
             'country_code' => '+91',
-            'phone_number' => '6666666666',
-            'password' => 'password',
+            'phone_number' => '5555555555',
+            'password' => 'scamfree',
             'status' => true,
         ]);
-        $schain->assignRole('MIS');
+        $ankitsales->assignRole('Sales Executive');
     }
 }

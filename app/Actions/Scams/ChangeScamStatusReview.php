@@ -21,7 +21,7 @@ class ChangeScamStatusReview
 
             $review = $request->validated('review');
 
-            $scam->logActivity('Changed Scam Status Review : '.ucfirst($review), ScamActivityEvent::{strtoupper('drafting_status')});
+            $scam->logActivity('Changed Scam Status Review : '.ucfirst($review), ScamActivityEvent::DRAFTING_STATUS);
 
             if ($review === ScamStatusReview::REJECTED->value) {
 
@@ -35,7 +35,7 @@ class ChangeScamStatusReview
 
                 $scam->logActivity(
                     $prevStatusRecord?->status ? ucfirst($request->type)." status updated : {$prevStatusRecord->status->title}" : "Removed {$request->type} status",
-                    ScamActivityEvent::{strtoupper("{$request->type}_status")}
+                    ScamActivityEvent::tryFrom(strtoupper("{$request->type}_status}")) ?? ScamActivityEvent::DRAFTING_STATUS
                 );
 
             }

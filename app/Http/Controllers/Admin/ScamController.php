@@ -251,6 +251,30 @@ class ScamController extends \App\Foundation\Controller
     }
 
     /**
+     * Quick remark update for assignees or permissioned users.
+     */
+    public function updateRemark(Request $request, Scam $scam): JsonResponse
+    {
+        $user = $request->user();
+
+        // Allow if user can perform full update or is associated with the scam (assignee)
+        if (! ($user->can(Permission::SCAM_UPDATE->value) || $scam->isUserAssociated($user))) {
+            abort(403, 'Unauthorized Access!');
+        }
+
+        $request->validate([
+            'remark' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $scam->remark = $request->input('remark');
+        $scam->save();
+
+        $this->activityLogService->updated('scam remark', $scam);
+
+        return $this->responseService->json(success: true, toast: new Toast('success', 'Remark Saved!'));
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Scam $scam): JsonResponse
