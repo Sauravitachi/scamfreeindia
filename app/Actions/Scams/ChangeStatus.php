@@ -160,6 +160,17 @@ class ChangeStatus
                     'active_user_ids' => $activeUsers->pluck('id')->all(),
                 ]);
                 foreach ($activeUsers as $user) {
+                    $alreadyNotified = $user->notifications()
+                        ->where('type', \App\Notifications\ScamStatusRegisteredNotification::class)
+                        ->where('data->registration_id', $createdRegistration->id)
+                        ->exists();
+                    if ($alreadyNotified) {
+                        Log::info('ScamStatusRegisteredNotification already exists for user', [
+                            'user_id' => $user->id,
+                            'registration_id' => $createdRegistration->id,
+                        ]);
+                        continue;
+                    }
                     try {
                         $user->notify(new \App\Notifications\ScamStatusRegisteredNotification($createdRegistration));
                         Log::info('ScamStatusRegisteredNotification dispatched', [

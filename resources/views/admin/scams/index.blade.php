@@ -1,7 +1,15 @@
-@use(Diglactic\Breadcrumbs\Breadcrumbs)
+    @use(Diglactic\Breadcrumbs\Breadcrumbs)
 @use(App\Constants\Permission)
 @use(App\View\ScamTable)
 
+<style>
+    .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+</style>
 @php
     $user = auth()->user();
 
@@ -56,6 +64,14 @@
                 'class' => '__excel_import_btn',
             ]
             : null,
+        $pms->scam_excel_import
+            ? [
+                'label' => 'FB Excel',
+                'icon' => 'ti ti-file-download',
+                'variant' => 'outline-secondary',
+                'class' => '__fb_excel_import_btn',
+            ]
+            : null,
         $pms->scam_bulk_update
             ? [
                 'label' => 'Bulk Update',
@@ -82,7 +98,7 @@
                 'invisible' => true,
             ]
             : null,
-        $user->can(Permission::SCAM_CREATE) ? ['label' => 'Add new scam', 'icon' => 'ti ti-plus', 'url' => route('admin.scams.create')] : null,
+        $user->can(Permission::SCAM_CREATE) ? ['label' => 'Add new scam', 'icon' => 'ti ti-plus', 'url' => route('admin.scams.create'), 'class' => '__quick_add_btn'] : null,
     ],
 ])
 
@@ -175,6 +191,7 @@
                         ],
                         ['title' => $scamTableView->getDateHeaderName($user)],
                         ['title' => 'Action'],
+                        ['title' => 'Remark'],
                     ],
                 ])
             </div>
@@ -184,6 +201,7 @@
         @include('admin.scams._escalation_list_modal')
         @include('admin.scams._status_update_data_modal')
         @include('admin.scams._scam_import_offcanvas')
+        @include('admin.scams._fb_excel_import_modal')
         @include('admin.escalations._chat_window')
         @include('admin.scams._scam_file_upload_modal')
         @include('admin.scams._scam_details_offcanvas')
@@ -205,6 +223,21 @@
         @if ($pms->scam_bulk_update)
             @include('admin.scams._bulk_update_details')
         @endif
+
+        <!-- Ajax Scam Modal -->
+        <div class="modal fade" id="ajax-scam-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Scam</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center py-5"><i class="ti ti-loader ti-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -387,6 +420,16 @@
                 $option.addClass('text-decoration-line-through');
             }
             return $option;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         $(document).ready(function() {
@@ -612,6 +655,33 @@
                             return Action.escalate(data) + Action.edit(data) + Action.delete(data);
                         }
                     },
+                   {
+    data: 'remark',
+    name: 'remark',
+    render: function (data, type, row, meta) {
+
+        // Only show the remark button here. The modal will display the remark when the button is clicked.
+        const hasRemark = !!data;
+        const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
+        const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
+        const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
+
+        const btn = `
+            <button 
+                type="button"
+                class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
+                data-scam-id="${row.id}"
+                data-remark="${remarkEncoded}"
+                title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
+            >
+                <i class="${icon}"></i>
+            </button>
+        `;
+
+        return btn;
+    }
+}
+
                 ],
             }).on('draw responsive-display', function() {
                 initSelect2($('.table-td-select'), {
@@ -628,6 +698,28 @@
 
             $("#scams-table").on('click', '[data-delete-id]', deleteScam);
             $("#scams-table").on('click', '[data-escalate-scam-id]', escalateScam);
+
+            // Remark add/edit button
+            $('#scams-table').on('click', 'button.__edit_remark_btn', function(e) {
+                e.preventDefault();
+                const scamId = $(this).data('scam-id');
+                const remarkEncoded = $(this).attr('data-remark') || '';
+                const remark = remarkEncoded ? decodeURIComponent(remarkEncoded) : '';
+                const action = "{{ route('admin.scams.update-remark', ':id') }}".replace(':id', scamId);
+
+                const formHtml = `<form action="${action}" method="POST">
+                    <input type="hidden" name="_method" value="PATCH">
+                    <div class="mb-3">
+                        <label class="form-label">Remark</label>
+                        <textarea name="remark" class="form-control" rows="4">${escapeHtml(remark)}</textarea>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>`;
+
+                openScamModalWithHtml(formHtml);
+            });
 
             $(document).on('app:main_table_redraw app:status_update_with_data_success app:status_change_with_data_modal_closed app:status_data_update_modal_closed', function() {
                 dtTable.draw(false);
@@ -818,6 +910,103 @@
             });
 
             FilterModule.registerDatatable(dtTable);
+
+            // Quick Add / Edit Modal handling
+            $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+
+            function openScamModalWithHtml(html) {
+                $('#ajax-scam-modal .modal-body').html(html);
+                // Reinitialize components
+                $('#ajax-scam-modal .select2').select2({ placeholder: 'Select', width: '100%' });
+                $('#ajax-scam-modal').modal('show');
+            }
+
+            // Open create form in modal
+            $('body').on('click', '.__quick_add_btn, a[href="{{ route('admin.scams.create') }}"]', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href') || $(this).data('url') || "{{ route('admin.scams.create') }}";
+                overlayLoader.show();
+                $.get(url, function(res) {
+                    // If response is HTML page, extract form
+                    const $form = $(res).find('form').first();
+                    if ($form.length) {
+                        openScamModalWithHtml($form);
+                    } else {
+                        // Fallback: if controller returns JSON with html
+                        openScamModalWithHtml(res.html || res);
+                    }
+                    overlayLoader.hide();
+                }).fail(function() { overlayLoader.hide(); toast.open({ type: 'error', message: 'Unable to load form.' }); });
+            });
+
+            // Open edit form in modal
+            $('#scams-table').on('click', 'a:has(i.ti-edit)', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                overlayLoader.show();
+                $.get(url, function(res) {
+                    const $form = $(res).find('form').first();
+                    if ($form.length) {
+                        openScamModalWithHtml($form);
+                    } else {
+                        openScamModalWithHtml(res.html || res);
+                    }
+                    overlayLoader.hide();
+                }).fail(function() { overlayLoader.hide(); toast.open({ type: 'error', message: 'Unable to load edit form.' }); });
+            });
+
+            // Handle form submit via AJAX
+            $('#ajax-scam-modal').on('submit', 'form', function(e) {
+                e.preventDefault();
+                const $form = $(this);
+                const action = $form.attr('action');
+                const method = ($form.find('input[name="_method"]').val() || $form.attr('method') || 'POST').toUpperCase();
+                const data = new FormData(this);
+                overlayLoader.show();
+                $.ajax({
+                    url: action,
+                    // Use POST for method overrides (PATCH/PUT/DELETE) so Laravel handles _method reliably
+                    type: ['PUT', 'PATCH', 'DELETE'].includes(method) ? 'POST' : method,
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function(resp) {
+                        overlayLoader.hide();
+                        if (resp.success) {
+                            $('#ajax-scam-modal').modal('hide');
+                            dtTable.draw(false);
+                            if (resp.toast) {
+                                toast.open(resp.toast);
+                            } else {
+                                toast.open({ type: 'success', message: 'Saved!' });
+                            }
+                        } else {
+                            toast.open({ type: 'error', message: resp.toast?.message || 'Save failed.' });
+                        }
+                    },
+                    error: function(xhr) {
+                        overlayLoader.hide();
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors || {};
+                            $form.find('.is-invalid').removeClass('is-invalid');
+                            $form.find('.invalid-feedback').remove();
+                            for (const key in errors) {
+                                const $input = $form.find(`[name="${key}"]`);
+                                if ($input.length) {
+                                    $input.addClass('is-invalid');
+                                    $input.after(`<div class="invalid-feedback">${errors[key][0]}</div>`);
+                                }
+                            }
+                                } else if (xhr.status === 403) {
+                            const message = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Unauthorized Access!';
+                            toast.open({ type: 'error', message: message });
+                        } else {
+                            toast.open({ type: 'error', message: 'An error occurred.' });
+                        }
+                    }
+                });
+            });
+
         });
 
         function setupDtSelects(selector) {

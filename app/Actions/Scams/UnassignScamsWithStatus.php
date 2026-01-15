@@ -22,20 +22,28 @@ class UnassignScamsWithStatus
     {
         DB::transaction(function () {
             foreach ([ScamStatusType::SALES, ScamStatusType::DRAFTING] as $statusType) {
-                $this->unassignScams($statusType);
+                $this->unassignScams($statusType);            // Status-based rule
+                $this->unassignIfNoStatusChange($statusType); // No-status 1 day rule
             }
         });
     }
+
+    /* ==============================
+     | STATUS-BASED UNASSIGN
+     ============================== */
 
     private function unassignScams(ScamStatusType $statusType): void
     {
         $unassignableStatuses = $this->getUnassignableStatuses($statusType);
 
-        if (empty($unassignableStatuses)) {
+        if ($unassignableStatuses->isEmpty()) {
             return;
         }
 
-        $scams = $this->getScamsWithStatuses($statusType, $unassignableStatuses->keys());
+        $scams = $this->getScamsWithStatuses(
+            $statusType,
+            $unassignableStatuses->keys()
+        );
 
         foreach ($scams as $scam) {
             $this->tryUnassign($scam, $statusType, $unassignableStatuses);
@@ -62,29 +70,83 @@ class UnassignScamsWithStatus
             ->get();
     }
 
-    private function tryUnassign(Scam $scam, ScamStatusType $statusType, $unassignableStatuses): void
-    {
-        $prefix = $statusType->value;
+    private function tryUnassign(
+        Scam $scam,
+        ScamStatusType $statusType,
+        $unassignableStatuses
+    ): void {
+        $prefix   = $statusType->value;
         $statusId = $scam->{"{$prefix}_status_id"};
-        $status = $unassignableStatuses->get($statusId);
-
+        $status   = $unassignableStatuses->get($statusId);
         $lastUpdated = $scam->{"{$prefix}_status_updated_at"};
 
-        if (! $status || $lastUpdated > now()->subDays($status->unassign_scam_in_days)) {
+        if (
+            ! $status ||
+            ! $lastUpdated ||
+            $lastUpdated > now()->subDays($status->unassign_scam_in_days)
+        ) {
             return;
         }
 
+        $this->forceUnassign(
+            $scam,
+            $statusType,
+            "Removed {$prefix} assignee (Due to status update days limit)",
+            $statusId
+        );
+    }
+
+    /* ==============================
+     | NO STATUS SELECTED (1 DAY RULE)
+     ============================== */
+
+    private function unassignIfNoStatusChange(ScamStatusType $statusType): void
+    {
+        $prefix = $statusType->value;
+
+        $scams = Scam::where('is_duplicate', false)
+            ->whereNotNull("{$prefix}_assignee_id")
+            ->whereNull("{$prefix}_status_id")
+            ->whereNotNull("{$prefix}_assigned_at")
+            ->where("{$prefix}_assigned_at", '<=', now()->subDay())
+            ->where('created_at', '>=', $this->scamsFrom)
+            ->get();
+
+        foreach ($scams as $scam) {
+            $this->forceUnassign(
+                $scam,
+                $statusType,
+                "Removed {$prefix} assignee (No status selected within 1 day)"
+            );
+        }
+    }
+
+    /* ==============================
+     | SHARED FORCE UNASSIGN
+     ============================== */
+
+    private function forceUnassign(
+        Scam $scam,
+        ScamStatusType $statusType,
+        string $description,
+        ?int $statusId = null
+    ): void {
+        $prefix = $statusType->value;
         $originalAssigneeId = $scam->{"{$prefix}_assignee_id"};
-        $scam->update(["{$prefix}_assignee_id" => null]);
+
+        $scam->update([
+            "{$prefix}_assignee_id" => null,
+        ]);
 
         $scam->statusUnassignRecords()->create([
             'assignee_id' => $originalAssigneeId,
-            'status_id' => $statusId,
+            'status_id'   => $statusId,
             'status_type' => $statusType,
         ]);
 
-        $event = ScamActivityEvent::{strtoupper("{$prefix}_assign")};
-        $description = "Removed {$prefix} assignee (Due to status update days limit)";
+        $eventName = strtoupper("{$prefix}_assign");
+        $event = constant("App\\Enums\\ScamActivityEvent::{$eventName}");
+
         $scam->logActivity($description, $event);
     }
 }

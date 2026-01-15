@@ -11,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton('customer.auth', function ($app) {
+            return new \App\Services\Customer\AuthService();
+        });
     }
 
     /**

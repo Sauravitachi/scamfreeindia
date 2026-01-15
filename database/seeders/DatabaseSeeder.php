@@ -17,9 +17,16 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $superAdmin = User::factory()->create([
+            'name' => 'Ankit Sharma',
+            'email' => 'sfi.ankitsharma@gmail.com',
+            'username' => 'ankitsharma',
+            'country_code' => '+91',
+            'phone_number' => '6280084608',
+            'password' => 'password', // Change to a secure password if needed
+            'status' => true,
         ]);
+
+        $superAdmin->assignRole('Super Admin');
     }
 }

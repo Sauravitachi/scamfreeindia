@@ -32,11 +32,10 @@ class BulkAssignUsers
             $customerEnquiries = isset($data['customer_enquiries']) && ! empty($data['customer_enquiries']) ? CustomerEnquiry::whereIn('id', $data['customer_enquiries'])->get(['id']) : null;
 
             foreach ($types as $type) {
-
-                $permission = Permission::{strtoupper($type).'_MANAGEMENT'};  // XYZ_MANAGEMENT
+                $permissionConst = strtoupper($type) . '_MANAGEMENT';
+                $permission = constant(Permission::class . '::' . $permissionConst);
 
                 if ($user->can($permission->value)) {
-
                     if (($data["{$type}_assignee_id"] ?? null) !== null) {
                         $update["{$type}_assignee_id"] = ($data["{$type}_assignee_id"] == 0) ? null : $data["{$type}_assignee_id"];
                     }
@@ -46,7 +45,6 @@ class BulkAssignUsers
                             $update["{$type}_status_id"] = ($data["{$type}_status_id"] == 0) ? null : $data["{$type}_status_id"];
                         }
                     }
-
                 }
             }
 

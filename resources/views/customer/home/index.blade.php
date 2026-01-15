@@ -16,12 +16,10 @@
         <h2 class="text-primary fw-normal">
             Welcome
             <span class="fw-bold">
-                @if($userName = auth()->customer()->full_name)
-                {{ $userName }}
-                @else
-                    User
-                @endif
-                !
+                  @php
+                    $customer = \App\Models\Customer::find(session('customer_id'));
+                @endphp
+                {{ $customer?->full_name ?? 'Customer' }}
             </span>
     </div>
     <div class="col-lg-3 order-1 order-lg-2">

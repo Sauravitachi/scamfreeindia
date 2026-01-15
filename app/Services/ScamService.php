@@ -55,7 +55,7 @@ class ScamService extends Service
         $table->editColumn('created_at', fn (Scam $scam): ?string => format_date($scam->created_at));
         $table->editColumn('sales_assigned_at', fn (Scam $scam): ?string => format_date($scam->sales_assigned_at));
         $table->editColumn('drafting_assigned_at', fn (Scam $scam): ?string => format_date($scam->drafting_assigned_at));
-
+        $table->editColumn('remark', fn (Scam $scam): ?string => $scam->remark);
         $table->filterColumn('customer_info', function (Builder $query, string $keyword) {
             $query->whereHas('customer', function (Builder $query) use ($keyword) {
                 $query->whereSearch($keyword);
@@ -663,19 +663,28 @@ class ScamService extends Service
         });
     }
 
-    public function getScamTitle(Scam $scam): string
+   public function getScamTitle(Scam $scam): string
     {
         $scam->load([
             'customer:id,first_name,last_name,dial_code,phone_number',
+            'scamType:id,title',
         ]);
 
-        $title = $scam->customer->full_name.' | '.$scam->scamType->title;
+        $parts = [];
 
-        if (! is_null($scamAmount = $scam->scam_amount)) {
-            $title .= ' | '.format_amount($scamAmount);
+        if ($scam->customer) {
+            $parts[] = $scam->customer->full_name;
         }
 
-        return $title;
+        if ($scam->scamType) {
+            $parts[] = $scam->scamType->title;
+        }
+
+        if (! is_null($scamAmount = $scam->scam_amount)) {
+            $parts[] = format_amount($scamAmount);
+        }
+
+        return implode(' | ', $parts);
     }
 
     public function isStatusCapped(Scam $scam, ?ScamStatus $status): bool

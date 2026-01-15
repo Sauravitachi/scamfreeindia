@@ -91,6 +91,7 @@ $routes = function () {
             Route::delete('delete-scam-status-file/{scam_status_file}', 'deleteStatusFile')->name('delete-scam-status-file');
             Route::delete('delete-scam-file/{scam_file}', 'deleteScamFile')->name('delete-scam-file');
             Route::post('acknowledge-status-reminders', 'acknowledgeStatusReminders')->name('acknowledge-status-reminders');
+            Route::match(['get', 'put', 'patch', 'post'], '{scam}/remark', 'updateRemark')->name('update-remark');
         });
         Route::resource('scams', ScamController::class);
         Route::prefix('customer-enquiries')->controller(CustomerEnquiryController::class)->as('customer-enquiries.')->group(function () {
@@ -113,6 +114,7 @@ $routes = function () {
         Route::prefix('notifications')->as('notifications.')->controller(NotificationController::class)->group(function () {
             Route::get('unread-notifications', 'unreadNotifications')->name('unread-notifications');
             Route::get('unread-notifications-count', 'unreadNotificationsCount')->name('unread-notifications-count');
+            Route::post('mark-latest-read', 'markLatestNotificationAsRead')->name('mark-latest-read');
         });
         Route::resource('notifications', NotificationController::class)->only('index', 'show');
         Route::resource('whatsapp-message-logs', WhatsappMessageLogController::class)->only('index', 'show');

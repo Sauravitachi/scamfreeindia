@@ -60,6 +60,7 @@ class Scam extends Model
 
         'is_duplicate',
         'scam_source_id',
+        'remark',
     ];
 
     /**

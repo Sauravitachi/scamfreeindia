@@ -4,7 +4,10 @@
             style="background-image: url({{ asset('assets/theme/customer.png') }})"></span>
         <div class="d-none d-xl-block ps-2">
             <div>
-                {{ auth()->customer()->full_name }}
+                @php
+                    $customer = \App\Models\Customer::find(session('customer_id'));
+                @endphp
+                {{ $customer?->full_name ?? 'Customer' }}
             </div>
         </div>
     </a>
