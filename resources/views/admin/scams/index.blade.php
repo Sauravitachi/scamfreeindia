@@ -352,6 +352,7 @@
                 return `<select class="form-select table-td-select data-select drafting-assignee-select select2" data-drafting-assignee="${userId}" data-scam-id="${scamId}" ${disable ? 'disabled' : ''}><option value>Select Drafting Assignee</option>${options}</select>`;
             },
 
+            
             getDraftingStatusSelect: function(statusId, scamId) {
                 let options = '';
                 
@@ -361,16 +362,7 @@
                 let optionStatuses = [];
                 let showNullOption = true;
 
-                if(@json($user->userType() !== 'admin')) {
-                    optionStatuses = [...(selectedStatus ? [selectedStatus] : []), ...(selectedStatus?.next_statuses ?? [])];
-                    if(selectedStatus) {    
-                        showNullOption = false;
-                    } else {
-                        optionStatuses = [...(firstDraftingStatus ? [firstDraftingStatus] : [])];
-                    }
-                } else {
-                    optionStatuses = scamStatuses;
-                }
+                optionStatuses = scamStatuses;
 
                 optionStatuses.forEach(function(status) {
                     if (status.type != SCAM_STATUS_DRAFTING)
@@ -394,6 +386,7 @@
 
                 return `<select class="form-select table-td-select drafting-status-select select2" data-drafting-status="${statusId}" data-scam-id="${scamId}" ${disable ? 'disabled' : ''}>${showNullOption ? `<option value>Select Drafting Status</option>` : ``}${options}</select>`;
             },
+
 
             getServiceAssigneeSelect: function(userId, scamId) {
                 let options = '';

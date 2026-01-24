@@ -59,15 +59,38 @@ class AssignedRoleSeeder extends Seeder
         // ]);
         // $schain->assignRole('MIS');
 
-        $ankitsales = User::factory()->create([
-            'name' => 'Ankit Sales',
-            'email' => 'sfi.ankitsales@gmail.com',
-            'username' => 'ankitsales',
-            'country_code' => '+91',
-            'phone_number' => '5555555555',
-            'password' => 'scamfree',
-            'status' => true,
-        ]);
-        $ankitsales->assignRole('Sales Executive');
+        // $ankitsales = User::factory()->create([
+        //     'name' => 'Ankit Sales',
+        //     'email' => 'sfi.ankitsales@gmail.com',
+        //     'username' => 'ankitsales',
+        //     'country_code' => '+91',
+        //     'phone_number' => '5555555555',
+        //     'password' => 'scamfree',
+        //     'status' => true,
+        // ]);
+        // $ankitsales->assignRole('Sales Executive');
+
+    //     $sachinsales = User::factory()->create([
+    //         'name' => 'sachin Sales',
+    //         'email' => 'sfi.sachinsales@gmail.com',
+    //         'username' => 'sachinsales',
+    //         'country_code' => '+91',
+    //         'phone_number' => '5555555555',
+    //         'password' => 'scamfree',
+    //         'status' => true,
+    //     ]);
+    //     $sachinsales->assignRole('Sales Executive');
+    // }
+
+    $ronit = User::factory()->create([
+        'name'=>'Ronit',
+        'email'=>'sfi.ronit@gmail.com',
+        'username'=>'ronit',
+        'country_code'=>'+91',
+        'phone_number'=>'4444444444',
+        'password'=>'scamfree',
+        'status'=>true,
+    ]);
+    $ronit->assignRole('Sales Executive');
     }
 }
