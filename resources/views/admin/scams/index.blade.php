@@ -89,6 +89,15 @@
                 'invisible' => true,
             ]
             : null,
+        $pms->any_full_management
+        ?[
+            'label' => 'Excel Export',
+            'icon' => 'ti ti-export',
+            'variant' => 'outline-success',
+            'class' => '__bulk_excel_export_btn',
+            'invisible' => true,
+        ]
+        : null,
         $pms->scam_recycle
             ? [
                 'label' => 'Recycle',
@@ -207,6 +216,7 @@
         @include('admin.scams._scam_details_offcanvas')
         @include('admin.scams._random_scams_assign_modal')
         @include('admin.scams.detail-page.components._reject_status_modal')
+        @include('admin.scams._bulk_excel_export_offcanvas')
 
         @if ($reminderScams->isNotEmpty())
             @include('admin.scams._reminder_scams_modal', ['$reminderScams' => $reminderScams])
@@ -220,6 +230,7 @@
                 'serviceUsers' => $serviceUsers,
             ])
         @endif
+        
         @if ($pms->scam_bulk_update)
             @include('admin.scams._bulk_update_details')
         @endif
@@ -1006,7 +1017,7 @@
             $('input.dt-select-checkbox').addClass('form-check-input cursor-pointer');
             $('input.dt-select-checkbox').on('change', function() {
                 const selectedRows = dtSelectedRows(dtTable);
-                pageButtonVisibility('.__bulk_assign_btn, .__bulk_recycle_btn, .__bulk_update_btn', selectedRows.length > 0);
+                pageButtonVisibility('.__bulk_assign_btn, .__bulk_recycle_btn, .__bulk_update_btn, .__bulk_excel_export_btn', selectedRows.length > 0);
             });
         }
 
@@ -1197,6 +1208,25 @@
             });
         @endif
         
+        // Open Bulk Excel Export Offcanvas
+        $('body').on('click', '.__bulk_excel_export_btn', function () {
+
+            const selectedIds = dtSelectedRows(dtTable, 'id');
+
+            if (selectedIds.length === 0) {
+                toast.open({
+                    type: 'warning',
+                    message: 'Please select at least one record to export.'
+                });
+                return;
+            }
+
+            $('#export_scam_ids').val(selectedIds.join(','));
+
+            const offcanvasEl = document.getElementById('bulkExcelExportOffcanvas');
+            const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+            offcanvas.show();
+        });
 
     </script>
 @endpush

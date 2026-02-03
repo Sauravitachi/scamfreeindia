@@ -66,7 +66,7 @@ class ExcelImport extends Component
 
     public $previewKey = null;
 
-    public $previewLimit = 200;
+    public $previewLimit = 10000;
 
 
 

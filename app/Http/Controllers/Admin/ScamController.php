@@ -47,6 +47,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ScamExport;
 use Illuminate\Support\Facades\Log;
 
 class ScamController extends \App\Foundation\Controller
@@ -508,4 +510,31 @@ class ScamController extends \App\Foundation\Controller
 
         return $this->responseService->json(success: true, toast: new Toast(type: 'success', message: 'Reminder Acknowledged!'));
     }
+
+    public function bulkExcelExport(Request $request)
+{
+    $exportType = $request->export_type;
+
+    $query = Scam::with([
+        'scamType',
+        'scamSource',
+        'salesAssignee',
+        'draftingAssignee',
+        'serviceAssignee',
+        'salesStatus',
+        'draftingStatus',
+    ]);
+
+    if ($exportType === 'selected') {
+        $ids = explode(',', $request->scam_ids);
+        $query->whereIn('id', $ids);
+    } else {        $query = Scam::filter($request->all());
+        $query = Scam::filter($request->all());
+    }
+
+    return Excel::download(
+        new ScamExport($query->get()),
+        'scams_' . now()->format('Ymd_His') . '.xlsx'
+    );
+}
 }

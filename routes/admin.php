@@ -92,6 +92,7 @@ $routes = function () {
             Route::delete('delete-scam-file/{scam_file}', 'deleteScamFile')->name('delete-scam-file');
             Route::post('acknowledge-status-reminders', 'acknowledgeStatusReminders')->name('acknowledge-status-reminders');
             Route::match(['get', 'put', 'patch', 'post'], '{scam}/remark', 'updateRemark')->name('update-remark');
+            Route::post('bulk-excel-export', 'bulkExcelExport')->name('bulk-excel-export');
         });
         Route::resource('scams', ScamController::class);
         Route::prefix('customer-enquiries')->controller(CustomerEnquiryController::class)->as('customer-enquiries.')->group(function () {
