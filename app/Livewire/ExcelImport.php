@@ -116,54 +116,32 @@ class ExcelImport extends Component
 
 
 
-        $rows = collect($collection)->map(function ($row) use ($customerColumns, $scamColumns, $existingPhones) {
+        $rows = collect($collection)->map(function ($row) {
 
-            $row = collect($row)->mapWithKeys(fn($v, $k) => [strtolower(trim($k)) => $v])->toArray();
+        $row = collect($row)->mapWithKeys(fn($v, $k) => [strtolower(trim($k)) => $v])->toArray();
 
+        $phone = $this->normalizePhone($row['phone'] ?? null);
+        $amount = $this->parseAmount($row['your_loss_amount'] ?? null);
+        $firstName = $row['first_name'] ?? $row['full_name'] ?? null;
+        $lastName = $row['last_name'] ?? null;
 
+        return [
+            'phone' => $phone ?? '',
+            'first_name' => $firstName ?? '',
+            'last_name' => $lastName ?? '',
+            'your_loss_amount' => $amount ?? 0,
+            'ad_id' => $row['ad_id'] ?? '',
+            'skip' => false, // 🔥 never skip here
+            'faulty' => !$phone,
+        ];
+    });
 
-            $phone = $this->normalizePhone($row['phone'] ?? null);
-
-            // Guard against missing key to avoid "Undefined array key" notices
-
-            $amount = $this->parseAmount($row['your_loss_amount'] ?? null) ?? null;
-
-            $firstName = $row['first_name'] ?? $row['full_name'] ?? null;
-
-            $lastName = $row['last_name'] ?? null;
-
-
-
-             return [
-
-                'phone' => $phone ?? '',
-
-                'first_name' => $firstName ?? '',
-
-                'last_name' => $lastName ?? '',
-
-                'your_loss_amount' => $amount ?? 0,
-
-                'ad_id' => $row['ad_id'] ?? '',
-
-                'skip' => in_array($phone, $existingPhones),
-
-                'faulty' => !$phone,
-
-            ];
-
-        });
 
 
 
         // Remove skipped rows if checkbox is checked
 
-        if ($this->skip_existing_phone_number) {
-
-            $rows = $rows->reject(fn($row) => $row['skip']);
-
-        }
-
+       
 
 
         // Cache full dataset and only preview a limited slice to keep payload small
@@ -232,77 +210,48 @@ class ExcelImport extends Component
 
             DB::transaction(function () use ($chunk, &$processed, &$skipped, &$faulty) {
 
-                foreach ($chunk as $row) {
+           foreach ($chunk as $row) {
 
-                    if ($row['skip']) {
+    if ($row['faulty']) {
+        $faulty++;
+        continue;
+    }
 
-                        $skipped++;
+    // 1️⃣ Skip existing customer if checkbox ON
+    if ($this->skip_existing_phone_number) {
+        if (Customer::where('phone_number', $row['phone'])->exists()) {
+            $skipped++;
+            continue;
+        }
+    }
 
-                        continue;
+    // 2️⃣ Create or get customer
+    $customer = Customer::firstOrCreate(
+        ['phone_number' => $row['phone']],
+        ['first_name' => $row['first_name'], 'last_name' => $row['last_name'] ?? '']
+    );
 
-                    }
+    // 3️⃣ Prevent duplicate scam
+    if ($this->unique_phone_number && Scam::where('customer_id', $customer->id)->exists()) {
+        $skipped++;
+        continue;
+    }
 
-                    if ($row['faulty']) {
+    $source = ScamSource::where('slug', 'excel_sheet_import')->first();
 
-                        $faulty++;
+    Scam::create([
+        'customer_id' => $customer->id,
+        'scam_type_id' => 8,
+        'scam_source_id' => $source?->id,
+        'scam_amount' => $row['your_loss_amount'] ?? null,
+        'customer_description' => null,
+        'is_duplicate' => 0,
+    ]);
 
-                        continue;
-
-                    }
-
-
-
-                    $customer = Customer::firstOrCreate(
-
-                        ['phone_number' => $row['phone']],
-
-                        ['first_name' => $row['first_name'] , 'last_name' => $row['last_name'] ?? '']
-
-                    );
-
-
-
-                    if ($this->unique_phone_number && Scam::where('customer_id', $customer->id)->exists()) {
-
-                        $skipped++;
-
-                        continue;
-
-                    }
-
-                    $source_id=ScamSource::where('slug','excel_sheet_import')->first();
-
-                    Scam::create([
-
-                        'customer_id' => $customer->id,
-
-                        'scam_type_id' => 8,
-
-                        'scam_source_id' => $source_id?->id,
-
-                        'scam_amount' => $row['your_loss_amount'] ?? null,
-
-                        'customer_description' =>null,
-
-                        'is_duplicate' => 0,
-
-                    ]);
+    $processed++;
+}
 
 
-
-                    $processed++;
-
-
-
-                    // Live update for progress bar
-
-                    $this->processedCount = $processed;
-
-                    $this->skippedCount = $skipped;
-
-                    $this->faultyCount = $faulty;
-
-                }
 
             });
 
@@ -366,67 +315,47 @@ class ExcelImport extends Component
 
             DB::transaction(function () use ($chunk, &$processed, &$skipped, &$faulty) {
 
-                foreach ($chunk as $row) {
+               foreach ($chunk as $row) {
 
-                    if (!empty($row['skip'])) { $skipped++; continue; }
+    if ($row['faulty']) {
+        $faulty++;
+        continue;
+    }
 
-                    if (!empty($row['faulty'])) { $faulty++; continue; }
+    // 1️⃣ Skip existing customer if checkbox ON
+    if ($this->skip_existing_phone_number) {
+        if (Customer::where('phone_number', $row['phone'])->exists()) {
+            $skipped++;
+            continue;
+        }
+    }
 
+    // 2️⃣ Create or get customer
+    $customer = Customer::firstOrCreate(
+        ['phone_number' => $row['phone']],
+        ['first_name' => $row['first_name'], 'last_name' => $row['last_name'] ?? '']
+    );
 
+    // 3️⃣ Prevent duplicate scam
+    if ($this->unique_phone_number && Scam::where('customer_id', $customer->id)->exists()) {
+        $skipped++;
+        continue;
+    }
 
-                    $customer = Customer::firstOrCreate(
+    $source = ScamSource::where('slug', 'excel_sheet_import')->value('id');
 
-                        ['phone_number' => $row['phone']],
+    Scam::create([
+        'customer_id' => $customer->id,
+        'scam_type_id' => 8,
+        'scam_source_id' => $source,
+        'scam_amount' => $row['your_loss_amount'] ?? null,
+        'customer_description' => null,
+        'is_duplicate' => 0,
+    ]);
 
-                        ['first_name' => $row['first_name'], 'last_name' => $row['last_name'] ?? '']
+    $processed++;
+}
 
-                    );
-
-
-
-                    if ($this->unique_phone_number && Scam::where('customer_id', $customer->id)->exists()) {
-
-                        $skipped++;
-
-                        continue;
-
-                    }
-
-
-
-                    $source = ScamSource::where('slug', 'excel_sheet_import')->first();
-
-                    Scam::create([
-
-                        'customer_id' => $customer->id,
-
-                        'scam_type_id' => 8,
-
-                        'scam_source_id' => $source?->id,
-
-                        'scam_amount' => $row['your_loss_amount'] ?? null,
-
-                        'customer_description' => null,
-
-                        'is_duplicate' => 0,
-
-                    ]);
-
-
-
-                    $processed++;
-
-
-
-                    // Update counts for progress bar
-
-                    $this->processedCount = $processed;
-
-                    $this->skippedCount = $skipped;
-
-                    $this->faultyCount = $faulty;
-
-                }
 
             });
 
