@@ -321,6 +321,11 @@ class ScamController extends \App\Foundation\Controller
             'type' => $request->type,
         ]);
 
+        Log::info('Scam Status Changed', [
+            'scam_id' => $scam->id,
+            'status_id' => $request->status_id,
+            'type' => $request->type,
+        ]);
         return $this->responseService->json(success: $success);
     }
 

@@ -94,7 +94,8 @@ class UnassignEnquiriesWithStatus
             'status_type' => $statusType->value,
         ]);
 
-        $event = ScamActivityEvent::{strtoupper("{$prefix}_assign")};
+        $eventName = strtoupper("{$prefix}_assign");
+        $event = constant(\App\Enums\ScamActivityEvent::class . "::{$eventName}");
         $description = "Removed {$prefix} assignee (Due to status update days limit on the enquiry)";
         $scam->logActivity($description, $event);
     }
