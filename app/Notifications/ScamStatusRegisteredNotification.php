@@ -23,28 +23,30 @@ class ScamStatusRegisteredNotification extends Notification
     }
 
     public function toArray($notifiable): array
-    {
-        $user   = optional($this->registration->causer);
-        $amount = $this->registration->scamRegistrationAmount?->amount;
+{
+    $user   = optional($this->registration->causer);
+    // Ensure we are getting the actual numeric amount from the related model
+    $amount = (float) ($this->registration->scamRegistrationAmount?->amount ?? 0);
 
-        $data = Structure::notificationData(
-            title: 'Scam Registered Successfully',
-            message: sprintf(
-                '%s registered scam amount %s',
-                $user->name ?? 'A user',
-                $amount ? '₹' . number_format($amount, 2) : 'N/A'
-            )
-        );
+    $data = Structure::notificationData(
+        title: 'Scam Registered Successfully',
+        message: sprintf(
+            '%s registered scam amount %s',
+            $user->name ?? 'A user',
+            $amount > 0 ? '₹' . number_format($amount, 2) : 'N/A'
+        )
+    );
 
+    // Explicit check: only 'fireworks' if amount is strictly greater than 4999
+    if ($amount > 4999) {
         $data['type'] = 'fireworks';
-        $data['scam_id'] = $this->registration->scam_id;
-        $data['registration_id'] = $this->registration->id;
-
-        Log::info('ScamStatusRegisteredNotification stored', [
-            'notifiable_id' => $notifiable->id ?? null,
-            'registration_id' => $this->registration->id,
-        ]);
-
-        return $data;
+    } else {
+        $data['type'] = 'normal';
     }
+
+    $data['scam_id'] = $this->registration->scam_id;
+    $data['registration_id'] = $this->registration->id;
+
+    return $data;
+}
 }
