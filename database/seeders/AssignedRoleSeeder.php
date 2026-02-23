@@ -82,15 +82,27 @@ class AssignedRoleSeeder extends Seeder
     //     $sachinsales->assignRole('Sales Executive');
     // }
 
-    $ronit = User::factory()->create([
-        'name'=>'Ronit',
-        'email'=>'sfi.ronit@gmail.com',
-        'username'=>'ronit',
+    // $ronit = User::factory()->create([
+    //     'name'=>'Ronit',
+    //     'email'=>'sfi.ronit@gmail.com',
+    //     'username'=>'ronit',
+    //     'country_code'=>'+91',
+    //     'phone_number'=>'4444444444',
+    //     'password'=>'scamfree',
+    //     'status'=>true,
+    // ]);
+    // $ronit->assignRole('Sales Executive');
+    // }
+
+    $rimpaalkaur = User::factory()->create([
+        'name'=>'Rimpaal Kaur',
+        'email'=>'sfi.rimpaalkaur@gmail.com',
+        'username'=>'rimpaalkaur',
         'country_code'=>'+91',
-        'phone_number'=>'4444444444',
+        'phone_number'=>'3333333333',
         'password'=>'scamfree',
         'status'=>true,
     ]);
-    $ronit->assignRole('Sales Executive');
+    $rimpaalkaur->assignRole('Sales Executive');
     }
 }

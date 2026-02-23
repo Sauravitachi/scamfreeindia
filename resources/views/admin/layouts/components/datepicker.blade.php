@@ -5,29 +5,37 @@
 @pushOnce('script')
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        $(document).ready(function() {
-            // datetime range
-            $(".datetime_range_picker").flatpickr({
+        function initDatePicker($selector) {
+            const $container = $selector ?? $(document);
+
+            $container.find(".datetime_range_picker").flatpickr({
                 mode: "range",
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
-                // minDate: "today",
                 time_24hr: false,
             });
 
-            $(".date_range_picker").flatpickr({
+            $container.find(".date_range_picker").flatpickr({
                 mode: "range",
                 enableTime: false,
                 dateFormat: "Y-m-d H:i",
                 time_24hr: false,
             });
 
-            $(".time_picker").flatpickr({
+            $container.find(".time_picker").flatpickr({
                 noCalendar: true,
                 enableTime: true,
                 dateFormat: "H:i",
                 time_24hr: false,
             });
+
+            $container.find(".datepicker").flatpickr({
+                dateFormat: "Y-m-d",
+            });
+        }
+
+        $(document).ready(function() {
+            initDatePicker();
         });
     </script>
 @endPushOnce

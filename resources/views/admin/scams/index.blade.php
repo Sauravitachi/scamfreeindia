@@ -918,12 +918,30 @@
             // Quick Add / Edit Modal handling
             $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
-            function openScamModalWithHtml(html) {
-                $('#ajax-scam-modal .modal-body').html(html);
-                // Reinitialize components
-                $('#ajax-scam-modal .select2').select2({ placeholder: 'Select', width: '100%' });
-                $('#ajax-scam-modal').modal('show');
-            }
+          function openScamModalWithHtml(html) {
+            const $modal = $('#ajax-scam-modal');
+
+            $modal.find('.modal-body').html(html);
+
+            // destroy previous validation
+            $modal.find('form').each(function(){
+                if($(this).data('validator')) {
+                    $(this).validate().destroy();
+                }
+            });
+
+            // execute scripts from blade
+            $modal.find('script').each(function () {
+                $.globalEval(this.innerHTML);
+            });
+
+            initSelect2($modal.find('.select2'), { dropdownParent: $modal });
+            initSelect2Ajax($modal.find('.select2-ajax'), { dropdownParent: $modal });
+            initDatePicker($modal.find('.datepicker'));
+
+            $modal.modal('show');
+        }
+
 
             // Open create form in modal
             $('body').on('click', '.__quick_add_btn, a[href="{{ route('admin.scams.create') }}"]', function(e) {

@@ -17,7 +17,7 @@ class ScamLeadRequest extends \App\Foundation\FormRequest
             'name' => ['nullable', 'string', 'max:250'],
             'email' => ['nullable', 'string', 'email'],
             'country_code' => ['nullable', 'string', $this->countryValidationRules()],
-            'phone_number' => ['required', 'numeric', 'digits_between:9,14'],
+            'phone_number' => ['required', 'numeric'],
             'scam_source_id' => ['nullable', 'integer', Rule::exists('scam_sources', 'id')],
             'scam_type_id' => ['nullable', 'integer', Rule::exists('scam_types', 'id')],
             'scam_amount' => ['nullable', 'numeric', 'min:1', 'max:999999999999'],
