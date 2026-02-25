@@ -127,6 +127,11 @@ class ScamStatus extends Model
         return $this->slug === 'registered';
     }
 
+    public function isNotInterested(): bool
+    {
+        return $this->slug === 'not_interested';
+    }
+
     public static function registeredId(): ?int
     {
         return static::where('slug', 'registered')->value('id');
