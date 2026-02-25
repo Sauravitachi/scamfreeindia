@@ -432,4 +432,22 @@ class Scam extends Model
     {
         return $this->belongsTo(ScamStatusUnassignRecord::class, 'latest_service_status_unassign_record_id');
     }
+
+    /**
+     * Get total registered amount
+     */
+    public function getRegisteredAmountAttribute(): float|int
+    {
+        return (float) $this->registrations->sum(function ($registration) {
+            return $registration->scamRegistrationAmount?->amount ?? 0;
+        });
+    }
+
+    /**
+     * Get formatted registered amount
+     */
+    public function getFormattedRegisteredAmountAttribute(): string
+    {
+        return format_amount($this->registered_amount);
+    }
 }

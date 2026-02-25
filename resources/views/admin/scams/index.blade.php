@@ -585,7 +585,11 @@
                             searchable: false,
                             orderable: false,
                             render: function(data, type, row, meta) {
-                                return Action.getSalesStatusSelect(data, row.id);
+                                let html = Action.getSalesStatusSelect(data, row.id);
+                                if(row.registered_amount > 0) {
+                                    html += `<div class="mt-1 text-nowrap"><span class="badge bg-label-info">Reg. Amt: ${row.formatted_registered_amount}</span></div>`;
+                                }
+                                return html;
                             },
                             createdCell: function(td, cellData, rowData, rowIndex, colIndex) {
                                 const reviewStatus = rowData?.sales_status_record?.review;

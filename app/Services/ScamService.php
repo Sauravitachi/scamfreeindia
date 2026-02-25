@@ -77,6 +77,9 @@ class ScamService extends Service
         $table->addColumn('sales_status_review_color', fn (Scam $scam) => $scam->salesStatusRecord?->review_color_faded);
         $table->addColumn('drafting_status_review_color', fn (Scam $scam) => $scam->draftingStatusRecord?->review_color_faded);
 
+        $table->addColumn('registered_amount', fn (Scam $scam) => $scam->registered_amount);
+        $table->addColumn('formatted_registered_amount', fn (Scam $scam) => $scam->formatted_registered_amount);
+
         return $table;
     }
 
@@ -93,6 +96,7 @@ class ScamService extends Service
             'scamSource:id,slug,title',
             'salesStatusRecord',
             'draftingStatusRecord',
+            'registrations.scamRegistrationAmount',
         ]);
 
         $query->with([
