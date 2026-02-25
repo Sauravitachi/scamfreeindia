@@ -150,6 +150,7 @@ class ChangeStatus
         });
 
         /* ================= NOTIFICATION AFTER COMMIT ================= */
+<<<<<<< HEAD
         if ($result) {
             DB::afterCommit(function () use ($scam, $request, $createdRegistration) {
                 $statusId = (int) $request->status_id;
@@ -196,6 +197,40 @@ class ChangeStatus
                                 'error' => $e->getMessage(),
                             ]);
                         }
+=======
+        if ($createdRegistration) {
+            DB::afterCommit(function () use ($createdRegistration) {
+                $activeUsers = \App\Models\User::query()->where('status', 1)->get();
+                Log::info('Sending REGISTERED notifications', [
+                    'registration_id' => $createdRegistration->id,
+                    'active_user_count' => $activeUsers->count(),
+                    'active_user_ids' => $activeUsers->pluck('id')->all(),
+                ]);
+                foreach ($activeUsers as $user) {
+                    $alreadyNotified = $user->notifications()
+                        ->where('type', \App\Notifications\ScamStatusRegisteredNotification::class)
+                        ->where('data->registration_id', $createdRegistration->id)
+                        ->exists();
+                    if ($alreadyNotified) {
+                        Log::info('ScamStatusRegisteredNotification already exists for user', [
+                            'user_id' => $user->id,
+                            'registration_id' => $createdRegistration->id,
+                        ]);
+                        continue;
+                    }
+                    try {
+                        $user->notify(new \App\Notifications\ScamStatusRegisteredNotification($createdRegistration));
+                        Log::info('ScamStatusRegisteredNotification dispatched', [
+                            'user_id' => $user->id,
+                            'registration_id' => $createdRegistration->id,
+                        ]);
+                    } catch (\Throwable $e) {
+                        Log::error('Failed to notify user for scam registration', [
+                            'user_id' => $user->id,
+                            'registration_id' => $createdRegistration->id,
+                            'error' => $e->getMessage(),
+                        ]);
+>>>>>>> a02341e (When user not intersted scam status show notification)
                     }
                 }
 
