@@ -8,6 +8,12 @@ $.ajaxSetup({
         if (location) {
             window.location.href = location;
         }
+
+        // Handle Session Expiration / CSRF Mismatch
+        if (xhr.status === 419) {
+            location.reload();
+        }
+
         const loginUrl = $('meta[name="login-url"]').attr('content');
         if (loginUrl && [401].includes(xhr.status)) {
             window.location.href = loginUrl;
@@ -28,6 +34,10 @@ const HtmlTag = {
 };
 
 function showValidationErrors(xhr) {
+    if (xhr.status === 419) {
+        location.reload();
+        return;
+    }
     if (xhr.status === 422) {
         const errors = xhr.responseJSON.errors;
 

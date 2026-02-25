@@ -36,9 +36,6 @@ use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 
 $routes = function () {
-    Route::get('/admin/{any}', function ($any): RedirectResponse {
-        return redirect("/{$any}");
-    })->where('any', '.*');
     Route::controller(AuthController::class)->name('auth.')->group(function () {
         Route::middleware('guest')->group(function () {
             Route::get('login', 'login')->name('login');
@@ -159,7 +156,7 @@ $routes = function () {
 };
 
 if (app()->environment('production')) {
-    Route::domain('portal.aseemjuneja.in')->name('admin.')->group($routes);
+    Route::domain('scamfreeindia.com')->name('admin.')->group($routes);
 } else {
     Route::prefix('admin')->name('admin.')->group($routes);
 }

@@ -23,14 +23,14 @@ $routes = function () {
     ])->group(function () {
         Route::controller(HomeController::class)->as('home.')->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::post('raise-enquirloginy', 'raiseEnquiry')->name('raise-enquiry');
+            Route::post('raise-enquiry', 'raiseEnquiry')->name('raise-enquiry');
         });
     });
 
 };
 
 if (app()->environment('production')) {
-    Route::domain('user.aseemjuneja.in')->name('customer.')->group($routes);
+    Route::domain('user.scamfreeindia.com')->name('customer.')->group($routes);
 } else {
     Route::name('customer.')->group($routes);
 }

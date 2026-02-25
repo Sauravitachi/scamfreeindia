@@ -51,6 +51,7 @@ class AuthController extends \App\Foundation\Controller
         $otp->update(['used_at' => now()]);
 
         CustomerAuth::login($otp->customer_id);
+        $request->session()->regenerate();
 
         return $this->responseService->json(success: true, redirectTo: route('customer.home.index'));
     }
@@ -58,6 +59,9 @@ class AuthController extends \App\Foundation\Controller
     public function logout(Request $request): RedirectResponse
     {
         CustomerAuth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('customer.login');
     }

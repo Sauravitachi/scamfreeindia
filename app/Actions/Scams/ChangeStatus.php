@@ -151,38 +151,76 @@ class ChangeStatus
 
         
         /* ================= NOTIFICATION AFTER COMMIT ================= */
-        if ($createdRegistration) {
-            DB::afterCommit(function () use ($createdRegistration) {
+        if ($createdRegistration || ($status?->slug === 'not_interested')) {
+            DB::afterCommit(function () use ($createdRegistration, $scam, $status) {
                 $activeUsers = \App\Models\User::query()->where('status', 1)->get();
-                Log::info('Sending REGISTERED notifications', [
-                    'registration_id' => $createdRegistration->id,
-                    'active_user_count' => $activeUsers->count(),
-                    'active_user_ids' => $activeUsers->pluck('id')->all(),
-                ]);
-                foreach ($activeUsers as $user) {
-                    $alreadyNotified = $user->notifications()
-                        ->where('type', \App\Notifications\ScamStatusRegisteredNotification::class)
-                        ->where('data->registration_id', $createdRegistration->id)
-                        ->exists();
-                    if ($alreadyNotified) {
-                        Log::info('ScamStatusRegisteredNotification already exists for user', [
-                            'user_id' => $user->id,
-                            'registration_id' => $createdRegistration->id,
-                        ]);
-                        continue;
+                
+                if ($createdRegistration) {
+                    Log::info('Sending REGISTERED notifications', [
+                        'registration_id' => $createdRegistration->id,
+                        'active_user_count' => $activeUsers->count(),
+                        'active_user_ids' => $activeUsers->pluck('id')->all(),
+                    ]);
+                    foreach ($activeUsers as $user) {
+                        $alreadyNotified = $user->notifications()
+                            ->where('type', \App\Notifications\ScamStatusRegisteredNotification::class)
+                            ->where('data->registration_id', $createdRegistration->id)
+                            ->exists();
+                        if ($alreadyNotified) {
+                            Log::info('ScamStatusRegisteredNotification already exists for user', [
+                                'user_id' => $user->id,
+                                'registration_id' => $createdRegistration->id,
+                            ]);
+                            continue;
+                        }
+                        try {
+                            $user->notify(new \App\Notifications\ScamStatusRegisteredNotification($createdRegistration));
+                            Log::info('ScamStatusRegisteredNotification dispatched', [
+                                'user_id' => $user->id,
+                                'registration_id' => $createdRegistration->id,
+                            ]);
+                        } catch (\Throwable $e) {
+                            Log::error('Failed to notify user for scam registration', [
+                                'user_id' => $user->id,
+                                'registration_id' => $createdRegistration->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
-                    try {
-                        $user->notify(new \App\Notifications\ScamStatusRegisteredNotification($createdRegistration));
-                        Log::info('ScamStatusRegisteredNotification dispatched', [
-                            'user_id' => $user->id,
-                            'registration_id' => $createdRegistration->id,
-                        ]);
-                    } catch (\Throwable $e) {
-                        Log::error('Failed to notify user for scam registration', [
-                            'user_id' => $user->id,
-                            'registration_id' => $createdRegistration->id,
-                            'error' => $e->getMessage(),
-                        ]);
+                }
+
+                if ($status?->slug === 'not_interested') {
+                    Log::info('Sending NOT_INTERESTED notifications', [
+                        'scam_id' => $scam->id,
+                        'active_user_count' => $activeUsers->count(),
+                    ]);
+                    foreach ($activeUsers as $user) {
+                        $alreadyNotified = $user->notifications()
+                            ->where('type', \App\Notifications\NotInterestedNotification::class)
+                            ->where('data->scam_id', $scam->id)
+                            ->exists();
+
+                        if ($alreadyNotified) {
+                            Log::info('NotInterestedNotification already exists for user', [
+                                'user_id' => $user->id,
+                                'scam_id' => $scam->id,
+                            ]);
+                            continue;
+                        }
+
+                        try {
+                            $user->notify(new \App\Notifications\NotInterestedNotification($scam, $request->user()));
+                            Log::info('NotInterestedNotification dispatched', [
+                                'user_id' => $user->id,
+                                'scam_id' => $scam->id,
+                            ]);
+                        } catch (\Throwable $e) {
+                            Log::error('Failed to notify user for not interested status', [
+                                'user_id' => $user->id,
+                                'scam_id' => $scam->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
                 }
             });
