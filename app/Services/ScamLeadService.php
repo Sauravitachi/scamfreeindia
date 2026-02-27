@@ -472,6 +472,10 @@ class ScamLeadService extends Service
             };
         }
 
+        if ($notifyTo->isEmpty()) {
+            User::role('Sales Executive')->get(['id'])->each(fn ($user) => $notifyTo->push($user));
+        }
+
         Notification::sendNow($notifyTo->unique(), new CustomerEnquiryNotification($enquiry));
     }
 }

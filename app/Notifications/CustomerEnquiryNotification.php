@@ -42,7 +42,7 @@ class CustomerEnquiryNotification extends Notification implements ShouldQueue
 
         return Structure::notificationData(
             title: $title,
-            message: $message,
+            message: $this->customerEnquiry->remark ? "$message | ".$this->customerEnquiry->remark : $message,
             link: route('admin.customer-enquiries.show', $this->customerEnquiry)
         );
     }
