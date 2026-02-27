@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Webhooks\SocialMediaWebhookController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,3 +19,6 @@ Route::get('/storage/uploads/status-files/{filename}', function ($filename) {
         'Cache-Control' => 'public, max-age=86400',
     ]);
 });
+
+Route::post('webhook/social-media', [SocialMediaWebhookController::class, 'handle']);
+
