@@ -178,6 +178,8 @@
                             'title' => 'Source',
                             'permit' => $pms->show_scam_source
                         ],
+                        ['title' => 'Remark'],
+
                         [
                             'title' => 'Sales Assignee',
                             'permit' => $pms->sales_management || $pms->service_access,
@@ -200,7 +202,6 @@
                         ],
                         ['title' => $scamTableView->getDateHeaderName($user)],
                         ['title' => 'Action'],
-                        ['title' => 'Remark'],
                     ],
                 ])
             </div>
@@ -558,6 +559,32 @@
                             return data.title;
                         }
                     },
+                    {
+                    data: 'remark',
+                    name: 'remark',
+                    render: function (data, type, row, meta) {
+
+                        // Only show the remark button here. The modal will display the remark when the button is clicked.
+                        const hasRemark = !!data;
+                        const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
+                        const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
+                        const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
+
+                        const btn = `
+                            <button 
+                                type="button"
+                                class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
+                                data-scam-id="${row.id}"
+                                data-remark="${remarkEncoded}"
+                                title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
+                            >
+                                <i class="${icon}"></i>
+                            </button>
+                        `;
+
+                        return btn;
+                    }
+                },
                     @endif
                     @if ($pms->sales_access || $pms->service_access)
                         @if ($pms->sales_management || $pms->service_access)
@@ -663,32 +690,7 @@
                             return Action.escalate(data) + Action.edit(data) + Action.delete(data);
                         }
                     },
-                   {
-    data: 'remark',
-    name: 'remark',
-    render: function (data, type, row, meta) {
-
-        // Only show the remark button here. The modal will display the remark when the button is clicked.
-        const hasRemark = !!data;
-        const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
-        const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
-        const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
-
-        const btn = `
-            <button 
-                type="button"
-                class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
-                data-scam-id="${row.id}"
-                data-remark="${remarkEncoded}"
-                title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
-            >
-                <i class="${icon}"></i>
-            </button>
-        `;
-
-        return btn;
-    }
-}
+                   
 
                 ],
             }).on('draw responsive-display', function() {

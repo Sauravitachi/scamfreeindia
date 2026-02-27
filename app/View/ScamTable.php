@@ -45,14 +45,14 @@ class ScamTable
     {
         $userType = $this->getUserType($user);
 
-        $colId = 11;
+        $colId = 12;
 
         if ($userType === 'sales') {
-            $colId = 8;
+            $colId = 9;
         }
 
         if ($userType === 'drafting') {
-            $colId = 6;
+            $colId = 7;
         }
 
         if ($user->can(Permission::SHOW_SCAM_SOURCE)) {
