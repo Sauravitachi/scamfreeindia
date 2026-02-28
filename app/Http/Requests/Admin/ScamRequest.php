@@ -26,7 +26,7 @@ class ScamRequest extends \App\Foundation\FormRequest
         return [
             'customer_id' => $customerIdRules,
             'scam_type_id' => ['nullable', 'integer', Rule::exists('scam_types', 'id')],
-            'scam_amount' => ['nullable', 'numeric', 'min:1', 'max:999999999999'],
+            'scam_amount' => ['nullable', 'numeric', 'max:999999999999'],
             'scam_source_id' => ['nullable', 'integer', Rule::exists('scam_sources', 'id')],
             'customer_description' => ['nullable', 'string', 'max:1000'],
         ];
