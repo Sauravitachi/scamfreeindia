@@ -47,6 +47,9 @@ class BulkAssignUsers
                     }
                 }
             }
+            if (($data['source_id'] ?? null) !== null) {
+                $update['scam_source_id'] = ($data['source_id'] == 0) ? null : $data['source_id'];
+            }
 
             if (! empty($update)) {
                 $scams->each(function (Scam $scam, int $index) use ($user, $update, $customerEnquiries): void {
