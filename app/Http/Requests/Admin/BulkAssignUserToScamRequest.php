@@ -36,6 +36,7 @@ class BulkAssignUserToScamRequest extends \App\Foundation\FormRequest
             'service_assignee_id' => ['nullable', 'integer', 'gte:0', $this->validateAssigneeRule('service')],
             'sales_status_id' => ['nullable', 'integer', 'gte:0', $this->validateStatusRule('sales')],
             'drafting_status_id' => ['nullable', 'integer', 'gte:0', $this->validateStatusRule('drafting')],
+            'source_id' => ['nullable', 'integer', 'gte:0', 'exists:scam_sources,id'],
         ];
     }
 

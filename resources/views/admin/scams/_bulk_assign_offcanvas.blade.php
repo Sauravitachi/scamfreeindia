@@ -52,6 +52,17 @@
                     <x-admin.select name='service_assignee_id' id="service_assignee_filter" label='Service Assignee' class="select2" placeholder="Same as current 🟢" />
                 </div>
             </div>
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h3>
+                        Source Details
+                    </h3>
+                </div>
+                <div class="col-lg-6">
+                    @php($options = $scamSources->pluck('title', 'id')->prepend('Select', 0)->toArray())
+                    <x-admin.select name='source_id' id="source_filter" label='Source' class="select2" :options="$options" placeholder="Same as current 🟢" />
+                </div>
+            </div>
             <div class="alerts-container sales-assignee-alerts-container"></div>
             <div class="alerts-container drafting-assignee-alerts-container"></div>
             <div class="text-end">
