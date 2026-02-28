@@ -28,5 +28,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $superAdmin->assignRole('Super Admin');
+
+        $this->call([
+            ScamTypesSeeder::class,
+        ]);
     }
 }
