@@ -18,7 +18,7 @@ use Throwable;
  */
 class WatiWhatsapp
 {
-    protected string $baseUrl = 'https://live-mt-server.wati.io/322386/api/v1/';
+    // protected string $baseUrl = 'https://live-mt-server.wati.io/322386/api/v1/';
 
     protected string $endpoint = 'sendTemplateMessage';
 
