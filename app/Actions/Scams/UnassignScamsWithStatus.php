@@ -6,8 +6,10 @@ use App\Enums\ScamActivityEvent;
 use App\Enums\ScamStatusType;
 use App\Models\Scam;
 use App\Models\ScamStatus;
+use App\Notifications\ScamHoldReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UnassignScamsWithStatus
 {
@@ -22,9 +24,10 @@ class UnassignScamsWithStatus
     {
         DB::transaction(function () {
             foreach ([ScamStatusType::SALES, ScamStatusType::DRAFTING] as $statusType) {
-                $this->unassignScams($statusType);            // Status-based rule
-                $this->unassignIfNoStatusChange($statusType); // No-status 1 day rule
+                $this->unassignScams($statusType);           
+                $this->unassignIfNoStatusChange($statusType);
             }
+            $this->holdStatus();
         });
     }
 
@@ -148,5 +151,67 @@ class UnassignScamsWithStatus
         $event = constant("App\\Enums\\ScamActivityEvent::{$eventName}");
 
         $scam->logActivity($description, $event);
+    }
+
+
+    private function holdStatus(): void
+    {
+        $statusType = ScamStatusType::SALES;
+        $prefix = $statusType->value;
+
+        $holdStatus = ScamStatus::where('type', $statusType)
+            ->where('slug', 'hold')
+            ->first();
+
+        if (!$holdStatus) {
+            return;
+        }
+
+        // Send 2-day reminder before unassigning
+        $this->notifyHoldReminder($holdStatus, $prefix);
+
+        // Unassign scams held for >= 1 month
+        $scams = Scam::where('is_duplicate', false)
+            ->whereNotNull("{$prefix}_assignee_id")
+            ->where("{$prefix}_status_id", $holdStatus->id)
+            ->where("{$prefix}_status_updated_at", '<=', now()->subMonth())
+            ->where('created_at', '>=', $this->scamsFrom)
+            ->get();
+
+        foreach ($scams as $scam) {
+            $this->forceUnassign(
+                $scam,
+                $statusType,
+                "Removed {$prefix} assignee (Hold for more than 1 month)",
+                $holdStatus->id
+            );
+        }
+    }
+
+    private function notifyHoldReminder(ScamStatus $holdStatus, string $prefix): void
+    {
+        // Find scams that will hit 1 month within the next 2 days (but not yet past 1 month)
+        $lowerBound = now()->subMonth();
+        $upperBound = now()->subMonth()->addDays(2);
+
+        Log::info("[HoldReminder] Window: {$lowerBound} → {$upperBound}");
+
+        $scams = Scam::where('is_duplicate', false)
+            ->whereNotNull("{$prefix}_assignee_id")
+            ->where("{$prefix}_status_id", $holdStatus->id)
+            ->where("{$prefix}_status_updated_at", '<=', $upperBound)
+            ->where("{$prefix}_status_updated_at", '>', $lowerBound)
+            ->where('created_at', '>=', $this->scamsFrom)
+            ->get();
+
+        Log::info("[HoldReminder] Matched scams: " . $scams->pluck('id')->join(', '));
+
+        foreach ($scams as $scam) {
+            $assignee = $scam->salesAssignee;
+            if ($assignee) {
+                $assignee->notify(new ScamHoldReminderNotification($scam));
+                Log::info("[HoldReminder] Notification sent for scam #{$scam->id} to user #{$assignee->id}");
+            }
+        }
     }
 }
