@@ -11,6 +11,7 @@ enum ScamAssigneeType: string
     case SALES = 'sales';
     case DRAFTING = 'drafting';
     case SERVICE = 'service';
+    case SUB_ADMIN = 'sub_admin';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum ScamAssigneeType: string
             self::SALES => 'Sales',
             self::DRAFTING => 'Drafting',
             self::SERVICE => 'Service',
+            self::SUB_ADMIN => 'Sub Admin',
         };
     }
 
@@ -27,6 +29,7 @@ enum ScamAssigneeType: string
             self::SALES => ScamStatusType::SALES,
             self::DRAFTING => ScamStatusType::DRAFTING,
             self::SERVICE => ScamStatusType::SERVICE,
+            self::SUB_ADMIN => null,
             default => null
         };
     }

@@ -127,11 +127,70 @@ class ScamController extends \App\Foundation\Controller
 
         $reminderScams = $this->service->statusReminderScams(Auth::user());
 
+        $subAdminUsers = User::role('Sub Admin')->orderBy('name')->get(['id', 'name', 'status']);
+
         return view('admin.scams.index', compact(
             'salesUsers',
             'scamStatuses',
             'draftingUsers',
             'serviceUsers',
+            'firstDraftingStatus',
+            'scamTypes',
+            'scamSources',
+            'hasFrozenStatus',
+            'reminderScams',
+            'subAdminUsers'
+        ));
+    }
+
+    public function subAdmin(Request $request, CustomerEnquiryService $customerEnquiryService): JsonResponse|View
+    {
+        if ($request->ajax()) {
+            return $this->service->dataTable($request)->toJson();
+        }
+
+        $user = $request->user();
+        $userRole = $user->getRoleString();
+
+        $hasFrozenEnquiries = $userRole && $customerEnquiryService->hasFrozenEnquiries($user, $userRole);
+
+        if ($hasFrozenEnquiries) {
+            return view('admin.scams.access-block');
+        }
+
+        $salesUsers = User::query()
+            ->with('lastActivity', function ($q) {
+                $q->select('id', 'activity_log.causer_id', 'activity_log.causer_type', 'created_at');
+            })->whereSales()->orderBy('name')->get(['id', 'name', 'status'])->append('has_today_activity');
+
+        $draftingUsers = User::whereDrafting()->orderBy('name')->get(['id', 'name', 'status']);
+        $serviceUsers = User::whereService()->orderBy('name')->get(['id', 'name', 'status']);
+        $subAdminUsers = User::whereSubAdmin()->orderBy('name')->get(['id', 'name', 'status']);
+        $scamStatuses = ScamStatus::withExists('statusUpdateFields')
+            ->with(['previousStatuses', 'nextStatuses'])->orderBy('title')->get();
+        $scamTypes = ScamType::orderBy('title')->get(['id', 'title']);
+        $firstDraftingStatus = $scamStatuses->where('type', ScamStatusType::DRAFTING)->sortBy('index')->first();
+        $scamSources = ScamSource::all(['id', 'title']);
+
+        $hasFrozenStatus = $userRole &&
+            (
+                ScamStatus::where('is_freezable', true)->exists() ||
+                setting("freeze_{$userRole}_null_threshold", null) !== null
+            ) &&
+            $this->service->hasFrozenStatus($user, $userRole);
+
+        $this->activityLogService->visited('sub-admin scams list');
+
+        ScamFilter::setData();
+
+        $reminderScams = $this->service->statusReminderScams(Auth::user());
+
+        return view('admin.scams.sub_admin', compact(
+            'salesUsers',
+            'scamStatuses',
+            'draftingUsers',
+            'serviceUsers',
+            'subAdminUsers',
             'firstDraftingStatus',
             'scamTypes',
             'scamSources',

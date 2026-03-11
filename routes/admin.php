@@ -58,6 +58,7 @@ $routes = function () {
             Route::post('{user}/login', 'loginAsUser')->name('login-as-user');
             Route::post('login-back-to-user', 'loginBackToUser')->name('login-back-to-user');
             Route::get('{user}/assignee-status', 'assigneeStatus')->name('assignee-status');
+            Route::post('{user}/update-preference', [UserController::class, 'updatePreference'])->name('update-preference');
         });
         Route::resource('users', UserController::class);
         Route::prefix('profile')->as('profile.')->group(function () {
@@ -152,6 +153,7 @@ $routes = function () {
         Route::prefix('office')->as('office.')->controller(OfficeController::class)->group(function () {
             Route::get('is-office-timing', 'isOfficeTiming')->name('is-office-timing');
         });
+        Route::get('sub_admin', [ScamController::class, 'subAdmin'])->name('sub_admin');
     });
 };
 

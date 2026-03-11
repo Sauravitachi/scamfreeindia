@@ -95,3 +95,8 @@ BC::for('admin.server.laravel-info', function (BreadcrumbTrail $trail): void {
     $trail->parent('admin.dashboard');
     $trail->push('Server')->push('Laravel Info');
 });
+
+BC::for('admin.sub_admin', function (BreadcrumbTrail $trail): void {
+    $trail->parent('admin.dashboard');
+    $trail->push('Sub Admin', route('admin.sub_admin'));
+});

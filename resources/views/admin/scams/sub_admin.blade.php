@@ -25,6 +25,8 @@
     $pms->drafting_access = $pms->drafting_management || $pms->drafting_management_self;
     $pms->service_access = $pms->service_management || $pms->service_management_self;
     $pms->show_scam_source = $user->can(Permission::SHOW_SCAM_SOURCE);
+    $pms->sub_admin_management = $user->can(Permission::SUB_ADMIN_MANAGEMENT);
+    $pms->sub_admin_access = $pms->sub_admin_management;
 
     $pms->any_full_management = $pms->sales_management || $pms->drafting_management || $pms->service_management;
 
@@ -42,7 +44,7 @@
 
 @extends('admin.layouts.app', [
     'pageTitle' => Breadcrumbs::current()->title,
-    'breadcrumbs' => Breadcrumbs::render('admin.scams.index'),
+    'breadcrumbs' => Breadcrumbs::render('admin.sub_admin'),
     'filters' => [
         'offcanvas-class' => 'offcanvas-full'
     ],
@@ -56,30 +58,7 @@
                  'invisible' => true,
             ]
             : null,
-        $pms->scam_excel_import
-            ? [
-                'label' => 'Excel Import',
-                'icon' => 'ti ti-file-arrow-left',
-                'variant' => 'outline-primary',
-                'class' => '__excel_import_btn',
-            ]
-            : null,
-        $pms->scam_excel_import
-            ? [
-                'label' => 'FB Excel',
-                'icon' => 'ti ti-file-download',
-                'variant' => 'outline-secondary',
-                'class' => '__fb_excel_import_btn',
-            ]
-            : null,
-        $pms->scam_bulk_update
-            ? [
-                'label' => 'Bulk Update',
-                'icon' => 'ti ti-pencil-check',
-                'variant' => 'outline-dark',
-                'class' => '__bulk_update_btn',
-                'invisible' => true,
-            ] : null,
+                
         $pms->any_full_management
             ? [
                 'label' => 'Bulk Assign',
@@ -178,31 +157,12 @@
                             'title' => 'Source',
                             'permit' => $pms->show_scam_source
                         ],
-                        ['title' => 'Remark'],
-                        [
-                            'title' => 'Sales Assignee',
-                            'permit' => $pms->sales_management || $pms->service_access,
-                        ],
-                        [
-                            'title' => 'Sub Admin',
-                            'permit' => $pms->sales_management || $pms->service_access,
-                        ],
-                        [
-                            'title' => 'Sales Status',
-                            'permit' => $pms->sales_access || $pms->service_access,
-                        ],
-                        [
-                            'title' => 'Drafting Assignee',
-                            'permit' => $pms->sales_access || $pms->drafting_management || $pms->service_access,
-                        ],
-                        [
-                            'title' => 'Drafting Status',
-                            'permit' => $pms->sales_access || $pms->drafting_access || $pms->service_access,
-                        ],
-                        [
-                            'title' => 'Service Assignee',
-                            'permit' => $pms->service_management,
-                        ],
+                            ['title' => 'Remark'],
+                        ['title' => 'Sales Assignee', 'permit' => $pms->sales_management || $pms->service_access],
+                        ['title' => 'Sales Status', 'permit' => $pms->sales_access || $pms->service_access],
+                        ['title' => 'Drafting Assignee', 'permit' => $pms->drafting_management || $pms->service_access],
+                        ['title' => 'Drafting Status', 'permit' => $pms->drafting_access],
+                        ['title' => 'Service Assignee', 'permit' => $pms->service_management],
                         ['title' => $scamTableView->getDateHeaderName($user)],
                         ['title' => 'Action'],
                     ],
@@ -232,7 +192,6 @@
                 'scamStatuses' => $scamStatuses,
                 'draftingUsers' => $draftingUsers,
                 'serviceUsers' => $serviceUsers,
-                'subAdminUsers' => $subAdminUsers,
             ])
         @endif
         
@@ -277,12 +236,12 @@
             salesUsers,
             draftingUsers,
             serviceUsers,
+            subAdminUsers,
             scamStatuses,
             firstDraftingStatus,
             SCAM_STATUS_SALES,
-            SCAM_STATUS_DRAFTING,
-            subAdminUsers
-        ] = @js([$salesUsers, $draftingUsers, $serviceUsers, $scamStatuses, $firstDraftingStatus, \App\Enums\ScamStatusType::SALES, \App\Enums\ScamStatusType::DRAFTING, $subAdminUsers]);
+            SCAM_STATUS_DRAFTING
+        ] = @js([$salesUsers, $draftingUsers, $serviceUsers, $subAdminUsers ?? [], $scamStatuses, $firstDraftingStatus, \App\Enums\ScamStatusType::SALES, \App\Enums\ScamStatusType::DRAFTING]);
 
         const pms = @js($pms);
 
@@ -404,6 +363,7 @@
                 return `<select class="form-select table-td-select drafting-status-select select2" data-drafting-status="${statusId}" data-scam-id="${scamId}" ${disable ? 'disabled' : ''}>${showNullOption ? `<option value>Select Drafting Status</option>` : ``}${options}</select>`;
             },
 
+
             getServiceAssigneeSelect: function(userId, scamId) {
                 let options = '';
                 serviceUsers.forEach(function(user) {
@@ -413,16 +373,8 @@
                 });
                 return `<select class="form-select table-td-select data-select service-assignee-select select2" data-service-assignee="${userId}" data-scam-id="${scamId}" ${!pms.service_management ? 'disabled' : ''}><option value>Select Service Assignee</option>${options}</select>`;
             },
-            getSubAdminSelect: function(userId, scamId) {
-                let options = '';
-                subAdminUsers.forEach(function(user) {
-                    const disableOption = !user.status;
-                    options +=
-                        `<option value="${user.id}" ${userId && userId == user.id ? 'selected' : ''} ${disableOption ? 'disabled' : ''}>${user.name}</option>`;
-                });
-                return `<select class="form-select table-td-select data-select sub-admin-select select2" data-sub-admin="${userId}" data-scam-id="${scamId}" ${!pms.sales_management ? 'disabled' : ''}><option value>Select Sub Admin</option>${options}</select>`;
-            },
 
+            
         };
 
         function dtGetScamById(scamId) {
@@ -463,7 +415,7 @@
                     leftColumns: 4
                 },
                 ajax: {
-                    url: @js(route('admin.scams.index')),
+                    url: @js(URL::current()),
                     data: function(d) {
                         d = withFilterData(d);
                         d.records_type = $('#records_type_select').val();
@@ -572,54 +524,52 @@
                             return data.title;
                         }
                     },
-                    {
-                    data: 'remark',
-                    name: 'remark',
-                    render: function (data, type, row, meta) {
+                    @endif {
+                        data: 'remark',
+                        name: 'remark',
+                        render: function (data, type, row, meta) {
 
-                        // Only show the remark button here. The modal will display the remark when the button is clicked.
-                        const hasRemark = !!data;
-                        const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
-                        const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
-                        const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
+                            // Only show the remark button here. The modal will display the remark when the button is clicked.
+                            const hasRemark = !!data;
+                            const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
+                            const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
+                            const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
 
-                        const btn = `
-                            <button 
-                                type="button"
-                                class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
-                                data-scam-id="${row.id}"
-                                data-remark="${remarkEncoded}"
-                                title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
-                            >
-                                <i class="${icon}"></i>
-                            </button>
-                        `;
+                            const btn = `
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
+                                    data-scam-id="${row.id}"
+                                    data-remark="${remarkEncoded}"
+                                    title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
+                                >
+                                    <i class="${icon}"></i>
+                                </button>
+                            `;
 
-                        return btn;
-                    }
-                },
+                            return btn;
+                        }
+                    },
+                    
+                    @if ($pms->sales_management || $pms->service_access)
+                        {
+                            data: 'sales_assignee_id',
+                            name: 'sales_assignee_id',
+                            searchable: false,
+                            orderable: false,
+                            render: function(data, type, row, meta) {
+                                let html = '';
+                                const previousAssigneeName = row.latest_sales_status_unassign_record?.assignee?.name;
+                                if(previousAssigneeName) {
+                                    html += `<span class="text-info" title="previous assignee">${previousAssigneeName}</span><br/>`;
+                                }
+                                html += Action.getSalesAssigneeSelect(data, row.id);
+                                return html;
+                            }
+                        },
                     @endif
                     @if ($pms->sales_access || $pms->service_access)
-                        @if ($pms->sales_management || $pms->service_access)
-                            {
-                                data: 'sales_assignee_id',
-                                name: 'sales_assignee_id',
-                                searchable: false,
-                                orderable: false,
-                                render: function(data, type, row, meta) {
-                                    
-                                    let html = '';
-
-                                    const previousAssigneeName = row.latest_sales_status_unassign_record?.assignee?.name;
-                                    if(previousAssigneeName) {
-                                        html += `<span class="text-info" title="previous assignee">${previousAssigneeName}</span><br/>`;
-                                    }
-                                    
-                                    html += Action.getSalesAssigneeSelect(data, row.id);
-                                    return html;
-                                }
-                            },
-                        @endif {
+                        {
                             data: 'sales_status_id',
                             name: 'sales_status_id',
                             searchable: false,
@@ -639,37 +589,25 @@
                             }
                         },
                     @endif
-                    @if ($pms->sales_management || $pms->service_access)
-                    {
-                        data: 'sub_admin_id',
-                        name: 'sub_admin_id',
-                        searchable: false,
-                        orderable: false,
-                        render: function(data, type, row, meta) {
-                            return Action.getSubAdminSelect(data, row.id);
-                        }
-                    },
-                    @endif
-                    @if ($pms->sales_access || $pms->drafting_access || $pms->service_access)
-                        @if ($pms->sales_access || $pms->drafting_management || $pms->service_access)
-                            {
-                                data: 'drafting_assignee_id',
-                                name: 'drafting_assignee_id',
-                                searchable: false,
-                                orderable: false,
-                                render: function(data, type, row, meta) {
-                                    let html = '';
-
-                                    const previousAssigneeName = row.latest_drafting_status_unassign_record?.assignee?.name;
-                                    if(previousAssigneeName) {
-                                        html += `<span class="text-info" title="previous assignee">${previousAssigneeName}</span><br/>`;
-                                    }
-                                    
-                                    html += Action.getDraftingAssigneeSelect(data, row.id);
-                                    return html;
+                    @if ($pms->drafting_management || $pms->service_access)
+                        {
+                            data: 'drafting_assignee_id',
+                            name: 'drafting_assignee_id',
+                            searchable: false,
+                            orderable: false,
+                            render: function(data, type, row, meta) {
+                                let html = '';
+                                const previousAssigneeName = row.latest_drafting_status_unassign_record?.assignee?.name;
+                                if(previousAssigneeName) {
+                                    html += `<span class="text-info" title="previous assignee">${previousAssigneeName}</span><br/>`;
                                 }
-                            },
-                        @endif {
+                                html += Action.getDraftingAssigneeSelect(data, row.id);
+                                return html;
+                            }
+                        },
+                    @endif
+                    @if ($pms->drafting_access)
+                        {
                             data: 'drafting_status_id',
                             name: 'drafting_status_id',
                             searchable: false,
@@ -685,18 +623,16 @@
                             }
                         },
                     @endif
-                    @if ($pms->service_access)
-                        @if ($pms->service_management)
-                            {
-                                data: 'service_assignee_id',
-                                name: 'service_assignee_id',
-                                searchable: false,
-                                orderable: false,
-                                render: function(data, type, row, meta) {
-                                    return Action.getServiceAssigneeSelect(data, row.id);
-                                }
-                            },
-                        @endif
+                    @if ($pms->service_management)
+                        {
+                            data: 'service_assignee_id',
+                            name: 'service_assignee_id',
+                            searchable: false,
+                            orderable: false,
+                            render: function(data, type, row, meta) {
+                                return Action.getServiceAssigneeSelect(data, row.id);
+                            }
+                        },
                     @endif {
                         data: @js($scamTableView->getDateFieldName($user)),
                         name: @js($scamTableView->getDateFieldName($user)),
@@ -895,6 +831,17 @@
                 });
             @endif
 
+            @if ($pms->sub_admin_management)
+                // Sub-Admin Assignee Select
+                $('#scams-table').on('change', '.sub-admin-assignee-select', function() {
+                    assigneeSelectHandler({
+                        $selectElement: $(this),
+                        type: 'sub_admin',
+                        originalAssigneeId: $(this).data('sub-admin-assignee')
+                    });
+                });
+            @endif
+
             @if ($pms->drafting_access)
                 // Drafting Assignee Select
                 @if ($pms->drafting_management)
@@ -913,17 +860,6 @@
                         $selectElement: $(this),
                         type: 'drafting',
                         originalStatusId: $(this).data('drafting-status')
-                    });
-                });
-            @endif
-
-            @if ($pms->drafting_access || $pms->service_access)
-                // Sub-Admin Assignee Select
-                $('#scams-table').on('change', '.sub-admin-select', function() {
-                    assigneeSelectHandler({
-                        $selectElement: $(this),
-                        type: 'sub_admin',
-                        originalAssigneeId: $(this).data('sub-admin')
                     });
                 });
             @endif

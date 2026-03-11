@@ -52,7 +52,7 @@
                         ['title' => 'Logged In?'],
                         ['title' => 'Status'],
                         ['title' => 'Role', 'width' => '20%', 'classname' => 'text-center'],
-                        ['title' => 'Stats'],
+                        ['title' => 'Sub Admin'],
                         ['title' => 'Registerd At'],
                         ['title' => 'Action'],
                     ],
@@ -73,7 +73,10 @@
         
         const pms = @js([
             'user_update' => auth()->user()->can(Permission::USER_UPDATE),
+            'sub_admin_assign' => auth()->user()->can(Permission::SUB_ADMIN_MANAGEMENT),
         ]);
+
+        const subAdminUsers = @js($subAdminUsers);
 
 
         const Action = {
@@ -83,6 +86,7 @@
                 'changeStatusUrl' => route('admin.users.change-status', ':id'),
                 'deleteUrl' => route('admin.users.destroy', ':id'),
                 'loginAsUserUrl' => route('admin.users.login-as-user', ':id'),
+                'updatePreferenceUrl' => route('admin.users.update-preference', ':id'),
                 'canEdit' => auth()->user()->can(Permission::UPDATE_ALL_USERS_DETAILS),
                 'canDelete' => auth()->user()->can(Permission::USER_DELETE),
                 'canLoginAsUser' => auth()->user()->can(Permission::LOGIN_AS_USER) && !session()->has('user_login')
@@ -208,13 +212,20 @@
                         orderable: false,
                         render: function(data, type, row, meta) {
 
-                            let html = '';
+                            const isSales = (row.user_type === 'sales') || (row.roles && row.roles.some(role => role.name.toLowerCase().includes('sales')));
 
-                            if(row.scam_status_freezes_exists || row.customer_enquiry_freezes_exists) {
-                                html += `<i class="fs-1 ti ti-flower text-primary" title="Status Freezed!"></i>`;
+                            if (!isSales) {
+                                return '';
                             }
 
-                            return html;
+                            let options = '<option value="">Select Sub Admin</option>';
+                            subAdminUsers.forEach(user => {
+                                options += `<option value="${user.id}" ${row.sub_admin_id == user.id ? 'selected' : ''}>${user.name}</option>`;
+                            });
+
+                            return `<select class="form-select form-select-sm sub-admin-id-select" data-id="${row.id}" onclick="event.stopPropagation()">
+                                    ${options}
+                            </select>`;
                         }
                     },
                     {
@@ -253,6 +264,32 @@
                         });
                     });
                 }
+
+                $('.sub-admin-id-select').on('change', function() {
+                    const id = $(this).data('id');
+                    const value = $(this).val();
+                    const url = Action.updatePreferenceUrl.replace(':id', id);
+
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: {
+                            key: 'sub_admin_id',
+                            value: value
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                toast.open({
+                                    type: 'success',
+                                    message: 'Sub Admin Assigned!'
+                                });
+                            }
+                        },
+                        error: function() {
+                            toast.open('error', 'Something Went Wrong!');
+                        }
+                    });
+                });
 
             });
 

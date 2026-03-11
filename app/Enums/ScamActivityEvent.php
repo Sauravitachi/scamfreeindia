@@ -16,4 +16,5 @@ enum ScamActivityEvent: string
     case SALES_STATUS = 'sales_status';
     case DRAFTING_STATUS = 'drafting_status';
     case RECYCLED = 'recycled';
+    case SUB_ADMIN_ASSIGN = 'sub_admin_assign';
 }

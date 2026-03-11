@@ -59,8 +59,8 @@ class UserController extends \App\Foundation\Controller implements HasMiddleware
         $this->activityLogService->visited('users');
 
         $roles = Role::orderBy('name', 'asc')->get(['id', 'name']);
-
-        return view('admin.users.index', compact('roles'));
+        $subAdminUsers = User::role('sub admin')->orderBy('name')->get(['id', 'name']);
+        return view('admin.users.index', compact('roles', 'subAdminUsers'));
     }
 
     /**
@@ -278,5 +278,25 @@ class UserController extends \App\Foundation\Controller implements HasMiddleware
                 'user_type' => $userType,
             ]
         );
+    }
+
+    public function updatePreference(Request $request, User $user): JsonResponse
+    {
+        $request->validate([
+            'key' => 'required|string',
+            'value' => 'nullable',
+        ]);
+
+        $key = $request->input('key');
+        $value = $request->input('value');
+
+        $user->preferences()->updateOrCreate(
+            ['key' => $key],
+            ['value' => $value]
+        );
+
+        $this->activityLogService->updated("user preference $key", $user);
+
+        return $this->responseService->json(success: true, message: 'Preference updated!');
     }
 }

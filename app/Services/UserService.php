@@ -21,6 +21,7 @@ class UserService extends Service
 
         $query->with([
             'roles' => fn (MorphToMany $query) => $query->orderBy('priority', 'asc'),
+            'preferences',
         ]);
 
         $query->withExists(['scamStatusFreezes', 'customerEnquiryFreezes']);
@@ -48,6 +49,14 @@ class UserService extends Service
         $table->addColumn('profile_avatar', fn (User $u) => $u->profileAvatar);
 
         $table->addColumn('is_logged_in', fn (User $user) => $user->isLoggedIn());
+
+        $table->addColumn('sub_admin_id', fn (User $user) => $user->subAdminId);
+        $table->addColumn('sub_admin_name', function (User $user) {
+            $subAdminId = $user->subAdminId;
+            if (!$subAdminId) return null;
+            return User::find($subAdminId)?->name;
+        });
+        $table->addColumn('user_type', fn (User $user) => $user->userType());
 
         $table->editColumn('created_at', fn (User $user) => format_date($user->created_at));
         $table->editColumn('login_at', fn (User $user) => $user->login_at?->diffForHumans());

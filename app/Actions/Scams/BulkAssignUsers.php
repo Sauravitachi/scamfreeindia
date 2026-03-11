@@ -24,7 +24,7 @@ class BulkAssignUsers
             $user = $request->user();
             $data = $request->validated();
 
-            $types = ['sales', 'drafting', 'service'];
+            $types = ['sales', 'drafting', 'service', 'sub_admin'];
 
             $update = [];
 
@@ -36,11 +36,13 @@ class BulkAssignUsers
                 $permission = constant(Permission::class . '::' . $permissionConst);
 
                 if ($user->can($permission->value)) {
-                    if (($data["{$type}_assignee_id"] ?? null) !== null) {
-                        $update["{$type}_assignee_id"] = ($data["{$type}_assignee_id"] == 0) ? null : $data["{$type}_assignee_id"];
+                    $column = $type === 'sub_admin' ? 'sub_admin_id' : "{$type}_assignee_id";
+
+                    if (($data[$column] ?? null) !== null) {
+                        $update[$column] = ($data[$column] == 0) ? null : $data[$column];
                     }
 
-                    if ($type != 'service') {
+                    if (in_array($type, ['sales', 'drafting'])) {
                         if (($data["{$type}_status_id"] ?? null) !== null) {
                             $update["{$type}_status_id"] = ($data["{$type}_status_id"] == 0) ? null : $data["{$type}_status_id"];
                         }

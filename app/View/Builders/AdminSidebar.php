@@ -206,5 +206,13 @@ class AdminSidebar extends Sidebar
             }
         }
 
+        {
+            $this->add(name: 'sub_admin', title: 'Sub Admin', icon: 'ti ti-user', url: null);
+
+            if ($this->user->can(Permission::SUB_ADMIN_MANAGEMENT->value)) {
+                $this->addSubmenu(title: 'Sub Admin', url: route('admin.sub_admin'));
+            }
+        }
+
     }
 }

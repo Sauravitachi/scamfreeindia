@@ -97,6 +97,7 @@ class ScamService extends Service
             'salesStatusRecord',
             'draftingStatusRecord',
             'registrations.scamRegistrationAmount',
+            'subAdmin:id,name',
         ]);
 
         $query->with([
@@ -138,6 +139,13 @@ class ScamService extends Service
             // all access
         } elseif ($user->can(Permission::SERVICE_MANAGEMENT_SELF)) {
             $query->where('service_assignee_id', $user->id);
+        }
+
+        // sub-admin permission check
+        if ($request->routeIs('admin.sub_admin')) {
+            if ($user->can(Permission::SUB_ADMIN_MANAGEMENT->value)) {
+                $query->where('sub_admin_id', $user->id);
+            }
         }
 
         if ($userRole && ! $user->isFreezeForceReleased()) {
@@ -245,6 +253,22 @@ class ScamService extends Service
                     }
                 }
             }
+            
+            if ($scam->isDirty("sub_admin_id")) {
+                $assigneeId = $scam->getAttribute("sub_admin_id");
+                if ($assigneeId) {
+                    $assginee = User::find($assigneeId, ['name', 'username']);
+                    $scam->logActivity(
+                        "Assigned to sub admin member : {$assginee->name_with_username}",
+                        ScamActivityEvent::UPDATED
+                    );
+                } else {
+                    $scam->logActivity(
+                        "Removed sub admin assignee",
+                        ScamActivityEvent::UPDATED
+                    );
+                }
+            }
         }
 
     }
@@ -269,19 +293,20 @@ class ScamService extends Service
             $user = $request->user();
             $data = $request->validated();
 
-            $type = $data['type']; // sales, drafting, service
+            $type = $data['type']; // sales, drafting, service, sub_admin
             $assigneeId = $data['assignee_id'];
             $enquiryId = $data['enquiry_id'] ?? null;
 
             $permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEMENT');  // XYZ_MANAGEMENT
 
             if ($user->can($permission->value)) {
+                $column = $type === 'sub_admin' ? 'sub_admin_id' : "{$type}_assignee_id";
 
                 $scam->fill([
-                    "{$type}_assignee_id" => $assigneeId,
+                    $column => $assigneeId,
                 ]);
 
-                if ($scam->isDirty("{$type}_assignee_id")) {
+                if ($scam->isDirty($column)) {
 
                     $scam->{"{$type}_assigned_at"} = now();
 
@@ -345,7 +370,7 @@ class ScamService extends Service
 
     public function validateAssigneeId(int $assigneeId, string $type): bool
     {
-        if (! in_array($type, ['sales', 'drafting', 'service'])) {
+        if (! in_array($type, ['sales', 'drafting', 'service', 'sub_admin'])) {
             throw new \InvalidArgumentException('Invalid Assignee type provided!');
         }
 
@@ -362,6 +387,9 @@ class ScamService extends Service
             'service' => [
                 Permission::SERVICE_MANAGEMENT->value,
                 Permission::SERVICE_MANAGEMENT_SELF->value,
+            ],
+            'sub_admin' => [
+                Permission::SUB_ADMIN_MANAGEMENT->value,
             ],
             default => [],
         };
@@ -499,6 +527,12 @@ class ScamService extends Service
             }
         }
 
+        if ($scam->isDirty('sub_admin_id')) {
+            if ($scam->sub_admin_id) {
+                $scam->sub_admin_assigned_at = now();
+            }
+        }
+
         if ($save) {
             $scam->saveQuietly();
         }
@@ -538,8 +572,12 @@ class ScamService extends Service
             ScamAssigneeRecord::logRecord(scam: $scam, type: ScamAssigneeType::DRAFTING, causer: $authId, unassignStatus: $unassignStatus);
         }
 
-        if ($scam->isDirty('service_assignee_id') || ($unassignStatus && $unassignStatus->type === ScamStatusType::SERVICE)) {
+        if ($scam->isDirty('service_assignee_id') || ($unassignStatus && $unassignStatus->type === ScamAssigneeType::SERVICE)) {
             ScamAssigneeRecord::logRecord(scam: $scam, type: ScamAssigneeType::SERVICE, causer: $authId, unassignStatus: $unassignStatus);
+        }
+
+        if ($scam->isDirty('sub_admin_id') || ($unassignStatus && $unassignStatus->type === ScamAssigneeType::SUB_ADMIN)) {
+            ScamAssigneeRecord::logRecord(scam: $scam, type: ScamAssigneeType::SUB_ADMIN, causer: $authId, unassignStatus: $unassignStatus);
         }
 
         if ($save) {

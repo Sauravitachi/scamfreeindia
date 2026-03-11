@@ -173,6 +173,7 @@ enum Permission: string
     case DASHBOARD_CUSTOMERS_BY_REGION_CHART = 'dashboard:customers_by_region_chart';
     case DASHBOARD_SCAMS_BY_SOURCE_CHART = 'dashboard:scams_by_source_chart';
     case DASHBOARD_RECENT_SCAMS = 'dashboard:recent_scams';
+    case SUB_ADMIN_MANAGEMENT = 'sub_admin_management';
 
     // Logs
 

@@ -21,6 +21,7 @@ enum ActivityEvent: string
     case SCAM_ASSIGN_SALES = 'scam_assign_sales';
     case SCAM_ASSIGN_DRAFTING = 'scam_assign_drafting';
     case SCAM_ASSIGN_SERVICE = 'scam_assign_service';
+    case SCAM_ASSIGN_SUB_ADMIN = 'scam_assign_sub_admin';
     case SCAM_BULK_ASSIGN_AND_UPDATE = 'scam_bulk_assign_and_update';
     case RANDOM_SCAM_ASSIGN = 'random_scam_assign';
     case SCAM_BULK_UPDATE = 'scam_bulk_update';
@@ -48,6 +49,7 @@ enum ActivityEvent: string
             self::SCAM_ASSIGN_SALES => 'Scam Assign Sales',
             self::SCAM_ASSIGN_DRAFTING => 'Scam Assign Drafting',
             self::SCAM_ASSIGN_SERVICE => 'Scam Assign Service',
+            self::SCAM_ASSIGN_SUB_ADMIN => 'Scam Assign Sub Admin',
             self::SCAM_BULK_ASSIGN_AND_UPDATE => 'Scam Bulk Assign And Update',
             self::RANDOM_SCAM_ASSIGN => 'Random Scam Assign',
             self::SCAM_BULK_UPDATE => 'Scam Bulk Update',

@@ -41,6 +41,7 @@ class ActivityLogService extends Service
             'sales' => ActivityEvent::SCAM_ASSIGN_SALES,
             'drafting' => ActivityEvent::SCAM_ASSIGN_DRAFTING,
             'service' => ActivityEvent::SCAM_ASSIGN_SERVICE,
+            'sub_admin' => ActivityEvent::SCAM_ASSIGN_SUB_ADMIN,
             default => throw new InvalidArgumentException("Invalid assignee type: {$assigneeType}")
         };
 

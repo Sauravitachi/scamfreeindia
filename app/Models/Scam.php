@@ -61,6 +61,8 @@ class Scam extends Model
         'is_duplicate',
         'scam_source_id',
         'remark',
+        'sub_admin_id',
+        'sub_admin_assigned_at',
     ];
 
     /**
@@ -73,6 +75,7 @@ class Scam extends Model
         'sales_assigned_at' => 'datetime',
         'drafting_assigned_at' => 'datetime',
         'service_assigned_at' => 'datetime',
+        'sub_admin_assigned_at' => 'datetime',
         'recycled_at' => 'datetime',
         'is_duplicate' => 'boolean',
     ];
@@ -295,6 +298,14 @@ class Scam extends Model
     public function serviceAssignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'service_assignee_id');
+    }
+
+    /**
+     * Get the user who is the sub-admin assigned to the scam.
+     */
+    public function subAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sub_admin_id');
     }
 
     /**

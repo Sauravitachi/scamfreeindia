@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Constants\Permission as PermissionConstant;
+use App\Enums\PreferenceKey;
 use App\Contracts\UserDetailTextContract;
 use App\Contracts\WhatsappProfileContract;
 use App\Services\HelperService;
@@ -142,6 +143,11 @@ class User extends Authenticatable implements UserDetailTextContract
     public static function scopeWhereService(Builder $query): void
     {
         $query->permission([PermissionConstant::SERVICE_MANAGEMENT, PermissionConstant::SERVICE_MANAGEMENT_SELF]);
+    }
+
+    public static function scopeWhereSubAdmin(Builder $query): void
+    {
+        $query->permission([PermissionConstant::SUB_ADMIN_MANAGEMENT]);
     }
 
     public function getRoleString(): ?string
@@ -288,6 +294,11 @@ class User extends Authenticatable implements UserDetailTextContract
     public function getPreferencesMapAttribute(): Collection
     {
         return $this->preferences->mapWithKeys(fn (UserPreference $item): array => [$item->key->value => $item->value]);
+    }
+
+    public function getSubAdminIdAttribute(): ?int
+    {
+        return (int) ($this->preferencesMap->get(PreferenceKey::SUB_ADMIN_ID->value) ?? 0) ?: null;
     }
 
     /**

@@ -45,9 +45,11 @@ class ScamAssigneeRecord extends Model
         $causerId = $causer ? (is_int($causer) ? $causer : $causer->id) : null;
         $unassignStatusId = $unassignStatus ? (is_int($unassignStatus) ? $unassignStatus : $unassignStatus->id) : null;
 
+        $column = $type === ScamAssigneeType::SUB_ADMIN ? 'sub_admin_id' : "{$type->value}_assignee_id";
+
         return ScamAssigneeRecord::create([
             'scam_id' => $scam->id,
-            'assignee_id' => $scam->{"{$type->value}_assignee_id"},
+            'assignee_id' => $scam->{$column},
             'assignee_type' => $type,
             'unassign_status_id' => $unassignStatusId,
             'causer_id' => $causerId,
