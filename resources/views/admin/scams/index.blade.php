@@ -26,6 +26,11 @@
     $pms->service_access = $pms->service_management || $pms->service_management_self;
     $pms->show_scam_source = $user->can(Permission::SHOW_SCAM_SOURCE);
 
+    // sub-admin permissions (indexed on this view so we can disable the
+    // dropdown exactly when the backend will reject the change)
+    $pms->sub_admin_management = $user->can(Permission::SUB_ADMIN_MANAGEMENT);
+    $pms->sub_admin_access = $pms->sub_admin_management;
+
     $pms->any_full_management = $pms->sales_management || $pms->drafting_management || $pms->service_management;
 
     $pms->bulkSelectedRequired = $pms->any_full_management;
@@ -183,13 +188,14 @@
                             'title' => 'Sales Assignee',
                             'permit' => $pms->sales_management || $pms->service_access,
                         ],
-                        [
-                            'title' => 'Sub Admin',
-                            'permit' => $pms->sales_management || $pms->service_access,
-                        ],
+                        
                         [
                             'title' => 'Sales Status',
                             'permit' => $pms->sales_access || $pms->service_access,
+                        ],
+                        [
+                            'title' => 'Sub Admin',
+                            'permit' => $pms->sales_management || $pms->service_access || $pms->sub_admin_management,
                         ],
                         [
                             'title' => 'Drafting Assignee',
@@ -420,7 +426,7 @@
                     options +=
                         `<option value="${user.id}" ${userId && userId == user.id ? 'selected' : ''} ${disableOption ? 'disabled' : ''}>${user.name}</option>`;
                 });
-                return `<select class="form-select table-td-select data-select sub-admin-select select2" data-sub-admin="${userId}" data-scam-id="${scamId}" ${!pms.sales_management ? 'disabled' : ''}><option value>Select Sub Admin</option>${options}</select>`;
+                return `<select class="form-select table-td-select data-select sub-admin-select select2" data-sub-admin="${userId}" data-scam-id="${scamId}" ${!(pms.sales_management || pms.sub_admin_management) ? 'disabled' : ''}><option value>Select Sub Admin</option>${options}</select>`;
             },
 
         };
@@ -793,6 +799,11 @@
                                 toast.open({
                                     type: 'success',
                                     message: success_message
+                                });
+                            } else {
+                                toast.open({
+                                    type: 'error',
+                                    message: res.toast?.message || 'Assignment failed.'
                                 });
                             }
                             dtTable.draw(false);

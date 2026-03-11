@@ -20,7 +20,7 @@ class CustomerRequest extends \App\Foundation\FormRequest
             'last_name' => ['nullable', 'string', 'max:100'],
             'email' => ['nullable', 'string', 'max:250', 'email', Rule::unique('customers', 'email')->ignore($customerId)],
             'country_code' => ['nullable', 'string', $this->countryValidationRules()],
-            'phone_number' => ['required', 'numeric', 'digits_between:10,14', Rule::unique('customers', 'phone_number')->ignore($customerId)],
+            'phone_number' => ['required', 'numeric', Rule::unique('customers', 'phone_number')->ignore($customerId)],
         ];
     }
 }

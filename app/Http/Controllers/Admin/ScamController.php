@@ -76,7 +76,13 @@ class ScamController extends \App\Foundation\Controller
             permit(Permission::SCAM_CREATE, only: ['create', 'store']),
             permit(Permission::SCAM_UPDATE, only: ['edit', 'update']),
             permit(Permission::SCAM_DELETE, only: ['destroy']),
-            permit([Permission::SALES_MANAGEMENT, Permission::DRAFTING_MANAGEMENT, Permission::SERVICE_MANAGEMENT], only: ['assignUser', 'bulkAssignUsers']),
+            // Assignment used by sales/drafting/service managers and (now) sub‑admin managers
+            permit([
+                Permission::SALES_MANAGEMENT,
+                Permission::DRAFTING_MANAGEMENT,
+                Permission::SERVICE_MANAGEMENT,
+                Permission::SUB_ADMIN_MANAGEMENT,          // added so sub‑admins can hit the endpoint as well
+            ], only: ['assignUser', 'bulkAssignUsers']),
             permit([Permission::SALES_MANAGEMENT, Permission::SALES_MANAGEMENT_SELF, Permission::DRAFTING_MANAGEMENT, Permission::DRAFTING_MANAGEMENT_SELF], only: ['changeStatus']),
             permit([Permission::SCAM_LIST, Permission::ESCALATION_LIST, Permission::ESCALATION_LIST_SELF], only: ['allScamEscalations']),
             permit(Permission::DELETE_SCAM_STATUS_FILE, only: ['deleteStatusFile', 'deleteScamFile']),
@@ -355,7 +361,16 @@ class ScamController extends \App\Foundation\Controller
      */
     public function assignUser(AssignUserToScamRequest $request, Scam $scam): JsonResponse
     {
-        $this->service->assignUser($scam, $request);
+        $updated = $this->service->assignUser($scam, $request);
+
+        if (! $updated) {
+            // nothing was changed (permission denied or value identical)
+            return $this->responseService->json(
+                success: false,
+                toast: new Toast('warning', 'Assignment was not saved.')
+            );
+        }
+
         $this->activityLogService->scamAssign($scam, $request->type, $request->assignee_id);
 
         return $this->responseService->json(success: true);

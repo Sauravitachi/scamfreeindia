@@ -35,7 +35,15 @@ class BulkAssignUsers
                 $permissionConst = strtoupper($type) . '_MANAGEMENT';
                 $permission = constant(Permission::class . '::' . $permissionConst);
 
-                if ($user->can($permission->value)) {
+                // same reasoning as in ScamService: sales managers should
+                // be able to bulk-assign sub-admins even if they lack the
+                // SUB_ADMIN_MANAGEMENT permission.
+                $canAssign = $user->can($permission->value);
+                if (! $canAssign && $type === 'sub_admin') {
+                    $canAssign = $user->can(Permission::SALES_MANAGEMENT->value);
+                }
+
+                if ($canAssign) {
                     $column = $type === 'sub_admin' ? 'sub_admin_id' : "{$type}_assignee_id";
 
                     if (($data[$column] ?? null) !== null) {

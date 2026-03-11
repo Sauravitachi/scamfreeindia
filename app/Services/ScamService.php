@@ -297,9 +297,22 @@ class ScamService extends Service
             $assigneeId = $data['assignee_id'];
             $enquiryId = $data['enquiry_id'] ?? null;
 
+            // when assigning users we previously required a matching
+            // "*_MANAGEMENT" permission. the frontend only enables the
+            // sub-admin dropdown for sales managers, however sub-admins
+            // also need to be able to assign themselves or others. keep
+            // the original check but also allow sales managers when the
+            // type is sub_admin so the UI and backend are in sync.
             $permission = constant(Permission::class . '::' . strtoupper($type) . '_MANAGEMENT');  // XYZ_MANAGEMENT
 
-            if ($user->can($permission->value)) {
+            $canAssign = $user->can($permission->value);
+            if (! $canAssign && $type === 'sub_admin') {
+                // sales managers may update the sub_admin_id even though
+                // they don't own the SUB_ADMIN_MANAGEMENT permission
+                $canAssign = $user->can(Permission::SALES_MANAGEMENT->value);
+            }
+
+            if ($canAssign) {
                 $column = $type === 'sub_admin' ? 'sub_admin_id' : "{$type}_assignee_id";
 
                 $scam->fill([
@@ -324,8 +337,11 @@ class ScamService extends Service
                         Notification::sendNow($assignee, new CaseAssignedNotification($scam));
                         \Log::info("Notification sent to user ID: {$assignee->id} for Scam ID: {$scam->id}");
                     }
+
+                    // assignment happened
+                    return true;
                 }
-            };
+            }
 
             return false;
         });
