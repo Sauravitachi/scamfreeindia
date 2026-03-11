@@ -31,7 +31,7 @@
     $pms->sub_admin_management = $user->can(Permission::SUB_ADMIN_MANAGEMENT);
     $pms->sub_admin_access = $pms->sub_admin_management;
 
-    $pms->any_full_management = $pms->sales_management || $pms->drafting_management || $pms->service_management;
+    $pms->any_full_management = $pms->sales_management || $pms->drafting_management || $pms->service_management || $pms->sub_admin_management;
 
     $pms->bulkSelectedRequired = $pms->any_full_management;
 

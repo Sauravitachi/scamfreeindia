@@ -28,7 +28,7 @@
     $pms->sub_admin_management = $user->can(Permission::SUB_ADMIN_MANAGEMENT);
     $pms->sub_admin_access = $pms->sub_admin_management;
 
-    $pms->any_full_management = $pms->sales_management || $pms->drafting_management || $pms->service_management;
+    $pms->any_full_management = $pms->sales_management || $pms->drafting_management || $pms->service_management || $pms->sub_admin_management;
 
     $pms->bulkSelectedRequired = $pms->any_full_management;
 
@@ -192,6 +192,7 @@
                 'scamStatuses' => $scamStatuses,
                 'draftingUsers' => $draftingUsers,
                 'serviceUsers' => $serviceUsers,
+                'subAdminUsers' => $subAdminUsers,
             ])
         @endif
         
@@ -236,12 +237,12 @@
             salesUsers,
             draftingUsers,
             serviceUsers,
-            subAdminUsers,
             scamStatuses,
             firstDraftingStatus,
             SCAM_STATUS_SALES,
-            SCAM_STATUS_DRAFTING
-        ] = @js([$salesUsers, $draftingUsers, $serviceUsers, $subAdminUsers ?? [], $scamStatuses, $firstDraftingStatus, \App\Enums\ScamStatusType::SALES, \App\Enums\ScamStatusType::DRAFTING]);
+            SCAM_STATUS_DRAFTING,
+            subAdminUsers
+        ] = @js([$salesUsers, $draftingUsers, $serviceUsers, $scamStatuses, $firstDraftingStatus, \App\Enums\ScamStatusType::SALES, \App\Enums\ScamStatusType::DRAFTING, $subAdminUsers ?? []]);
 
         const pms = @js($pms);
 

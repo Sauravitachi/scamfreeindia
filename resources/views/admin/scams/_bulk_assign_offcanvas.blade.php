@@ -43,13 +43,8 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <div class="col-12">
-                    <h3>
-                        Service Details
-                    </h3>
-                </div>
                 <div class="col-lg-6">
-                    <x-admin.select name='service_assignee_id' id="service_assignee_filter" label='Service Assignee' class="select2" placeholder="Same as current 🟢" />
+                    <x-admin.select name='sub_admin_id' id="sub_admin_bulk_select" label='Sub Admin' class="select2" placeholder="Same as current 🟢" />
                 </div>
             </div>
             <div class="row mb-3">
@@ -83,9 +78,7 @@
         
         function getValidAssignSelect(users, type) {
 
-            const assigneeIds = dtSelectedRows(dtTable, type + '_assignee_id');
-
-            const filteredUsers = users.filter(user => user.id !== null && !assigneeIds.includes(user.id));
+            const filteredUsers = users.filter(user => user.id !== null);
 
             return [{id: 0, text: 'Select'} ,...filteredUsers.map(user => ({id: user.id, text: user.name, disabled: !user.status }))];
 
@@ -144,9 +137,6 @@
             const $offcanvas = $('#bulk-assign-offcanvas');
             const $offcanvasBody = $offcanvas.find(".offcanvas-body");
             $offcanvasBody.html(body);
-            initSelect2($offcanvasBody.find('select.select2'), {
-                dropdownParent: $offcanvasBody
-            });
 
             ajaxForm('#bulk-assign-form', {
                 handleToast: true,
@@ -168,26 +158,24 @@
                 }
             });
 
-            $('#sales_assignee_bulk_select').off('change').on('change', function() {
-                const assigneeId = $(this).val();
-                $('#bulk-assign-offcanvas').find('.alerts-container').empty();
-                assigneeId && fetchBulkAssigneeValidityStatus(assigneeId);
-            });
-            $('#sales_assignee_bulk_select').select2('destroy');
-
-
             const assigneeConfigs = [
                 { selector: '#sales_assignee_bulk_select', users: salesUsers, role: 'sales' },
                 { selector: '#drafting_assignee_bulk_select', users: draftingUsers, role: 'drafting' },
-                { selector: '#service_assignee_bulk_select', users: serviceUsers, role: 'service' }
+                { selector: '#sub_admin_bulk_select', users: subAdminUsers, role: 'sub_admin' }
             ];
 
             assigneeConfigs.forEach(({ selector, users, role }) => {
-                initSelect2($(selector), {
+                const $select = $offcanvasBody.find(selector);
+                initSelect2($select, {
                     data: getValidAssignSelect(users, role),
                     dropdownParent: $offcanvasBody,
                     templateResult: disabledLineSelect2TemplateResult
                 });
+            });
+
+            // Status select2 initialization
+            initSelect2($offcanvasBody.find('select[name="sales_status_id"], select[name="drafting_status_id"], select[name="source_id"]'), {
+                dropdownParent: $offcanvasBody
             });
 
 
