@@ -45,7 +45,7 @@ class ScamTable
     {
         $userType = $this->getUserType($user);
 
-        $colId = 12;
+        $colId = 13;
 
         if ($userType === 'sales') {
             $colId = 9;
