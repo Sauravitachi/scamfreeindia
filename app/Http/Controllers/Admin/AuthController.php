@@ -20,8 +20,13 @@ class AuthController extends \App\Foundation\Controller
         protected ResponseService $responseService
     ) {}
 
-    public function login()
+    public function login(Request $request)
     {
+        // Proactively clear any stale session/cookie data
+        // This solves the issue where users can't login after auto-logout without incognito
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return view('admin.login');
     }
 

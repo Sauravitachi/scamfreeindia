@@ -164,10 +164,16 @@ class ScamController extends \App\Foundation\Controller
             return view('admin.scams.access-block');
         }
 
-        $salesUsers = User::query()
+        $salesUsersQuery = User::query()
             ->with('lastActivity', function ($q) {
                 $q->select('id', 'activity_log.causer_id', 'activity_log.causer_type', 'created_at');
-            })->whereSales()->orderBy('name')->get(['id', 'name', 'status'])->append('has_today_activity');
+            })->whereSales()->orderBy('name');
+
+        if ($user->can(Permission::SUB_ADMIN_MANAGEMENT->value)) {
+            $salesUsersQuery->underSubAdmin($user);
+        }
+
+        $salesUsers = $salesUsersQuery->get(['id', 'name', 'status'])->append('has_today_activity');
 
         $draftingUsers = User::whereDrafting()->orderBy('name')->get(['id', 'name', 'status']);
         $serviceUsers = User::whereService()->orderBy('name')->get(['id', 'name', 'status']);

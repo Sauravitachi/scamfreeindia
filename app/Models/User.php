@@ -150,6 +150,14 @@ class User extends Authenticatable implements UserDetailTextContract
         $query->permission([PermissionConstant::SUB_ADMIN_MANAGEMENT]);
     }
 
+    public static function scopeUnderSubAdmin(Builder $query, int|User $subAdmin): void
+    {
+        $id = $subAdmin instanceof User ? $subAdmin->id : $subAdmin;
+        $query->whereHas('preferences', function (Builder $q) use ($id) {
+            $q->where('key', \App\Enums\PreferenceKey::SUB_ADMIN_ID)->where('value', $id);
+        });
+    }
+
     public function getRoleString(): ?string
     {
         if ($this->roles->first()?->id === config('settings.sales_role_id')) {
