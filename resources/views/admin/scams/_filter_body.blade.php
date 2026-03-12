@@ -93,6 +93,14 @@
                             <x-admin.checkbox name='exclude_sales_status_updated_at' label='Exclude' />
                         @endcan
                     </div>
+                    @can(Permission::SUB_ADMIN_MANAGEMENT)
+                        <div class="col-lg-6">
+                            @php($options = $subAdminUsers->pluck('name', 'id'))
+                            @php($options = $options->prepend('UnAssigned 🔴', -1)->toArray())
+                            <x-admin.select name='sub_admin_id' label='Sub Admin' class="filter-select2" :options="$options" :selected="request()->input('filter_sub_admin_id')" multiple />
+                            <x-admin.checkbox name='exclude_sub_admin_id' label='Exclude' />
+                        </div>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -265,7 +273,8 @@
                     'drafting_assignee_id',
                     'sales_status_id',
                     'drafting_status_id',
-                    'service_assignee_id'
+                    'service_assignee_id',
+                    'sub_admin_id'
                 ];
                 
                 fields.forEach(field => {

@@ -37,6 +37,10 @@ class ScamFilter
         if (($draftingAssigneeId = $request->integer('drafting_assignee_id')) && ($draftingAssigneeId == -1 || User::whereDrafting()->where('id', $draftingAssigneeId)->exists())) {
             $request->merge(['filter_drafting_assignee_id' => $draftingAssigneeId]);
         }
+
+        if (($subAdminId = $request->integer('sub_admin_id')) && ($subAdminId == -1 || User::whereSubAdmin()->where('id', $subAdminId)->exists())) {
+            $request->merge(['filter_sub_admin_id' => $subAdminId]);
+        }
     }
 
     public static function apply(Builder $query)
@@ -157,6 +161,13 @@ class ScamFilter
          */
         if ($request->filled('service_assignee_id')) {
             self::assigneeFilter(query: $query, request: $request, field: 'service_assignee_id', assigneeType: ScamAssigneeType::SERVICE);
+        }
+
+        /**
+         * Sub Admin Filter
+         */
+        if ($request->filled('sub_admin_id')) {
+            self::subAdminFilter($query, $request);
         }
 
         /**
@@ -436,5 +447,26 @@ class ScamFilter
                 default: fn (Builder $q) => $q->whereBetween('created_at', [$range->start, $range->end])
             )->where('status_type', $statusType);
         });
+    }
+
+    private static function subAdminFilter(Builder $query, Request $request): void
+    {
+        $keyData = $request->input('sub_admin_id');
+
+        if (! is_array($keyData)) {
+            $keyData = [$keyData];
+        }
+
+        $reverse = $request->boolean('exclude_sub_admin_id');
+        $hasNullable = in_array('-1', $keyData);
+
+        if (! empty($keyData) && ! (count($keyData) == 1 && $keyData[0] === null)) {
+            $query->where(function (Builder $q) use ($keyData, $reverse, $hasNullable): void {
+                if ($hasNullable) {
+                    $q->{$reverse ? 'whereNotNull' : 'whereNull'}('sub_admin_id');
+                }
+                $q->{$reverse ? 'orWhereNotIn' : 'orWhereIn'}('sub_admin_id', $keyData);
+            });
+        }
     }
 }
