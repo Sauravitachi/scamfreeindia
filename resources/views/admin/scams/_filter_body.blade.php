@@ -93,7 +93,7 @@
                             <x-admin.checkbox name='exclude_sales_status_updated_at' label='Exclude' />
                         @endcan
                     </div>
-                    @can(Permission::SUB_ADMIN_MANAGEMENT)
+                    @can(Permission::SUB_ADMIN_FILTER)
                         <div class="col-lg-6">
                             @php($options = $subAdminUsers->pluck('name', 'id'))
                             @php($options = $options->prepend('UnAssigned 🔴', -1)->toArray())
