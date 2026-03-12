@@ -578,33 +578,33 @@
                             return data.title;
                         }
                     },
-                    {
-                    data: 'remark',
-                    name: 'remark',
-                    render: function (data, type, row, meta) {
-
-                        // Only show the remark button here. The modal will display the remark when the button is clicked.
-                        const hasRemark = !!data;
-                        const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
-                        const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
-                        const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
-
-                        const btn = `
-                            <button 
-                                type="button"
-                                class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
-                                data-scam-id="${row.id}"
-                                data-remark="${remarkEncoded}"
-                                title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
-                            >
-                                <i class="${icon}"></i>
-                            </button>
-                        `;
-
-                        return btn;
-                    }
-                },
                     @endif
+                    {
+                        data: 'remark',
+                        name: 'remark',
+                        render: function (data, type, row, meta) {
+
+                            // Only show the remark button here. The modal will display the remark when the button is clicked.
+                            const hasRemark = !!data;
+                            const remarkEncoded = hasRemark ? encodeURIComponent(data) : '';
+                            const icon = hasRemark ? 'ti ti-edit' : 'ti ti-plus';
+                            const btnVariant = hasRemark ? 'btn-outline-secondary' : 'btn-outline-success';
+
+                            const btn = `
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm ${btnVariant} ms-2 __edit_remark_btn"
+                                    data-scam-id="${row.id}"
+                                    data-remark="${remarkEncoded}"
+                                    title="${hasRemark ? 'View / Edit remark' : 'Add remark'}"
+                                >
+                                    <i class="${icon}"></i>
+                                </button>
+                            `;
+
+                            return btn;
+                        }
+                    },
                     @if ($pms->sales_access || $pms->service_access)
                         @if ($pms->sales_management || $pms->service_access)
                             {
@@ -645,7 +645,7 @@
                             }
                         },
                     @endif
-                    @if ($pms->sales_management || $pms->service_access)
+                    @if ($pms->sales_management || $pms->service_access || $pms->sub_admin_management)
                     {
                         data: 'sub_admin_id',
                         name: 'sub_admin_id',
