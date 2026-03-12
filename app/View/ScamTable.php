@@ -28,6 +28,7 @@ class ScamTable
         return 'Created At';
     }
 
+    
     public function getDateFieldName(AuthUser|User $user): string
     {
         $userType = $this->getUserType($user);
