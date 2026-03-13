@@ -23,6 +23,7 @@
             </div>
         </div>
     </div>
+    
     @canany([Permission::SCAM_TYPE_FILTER, Permission::SHOW_SCAM_SOURCE])
         <div class="col-xl-8">
             <div class="card filter-card">
@@ -52,6 +53,8 @@
             </div>
         </div>
     @endcanany
+
+    
 
     @canany([
         Permission::SALES_ASSIGNEE_FILTER,
@@ -151,7 +154,7 @@
     </div>
     @endcanany
 
-    @canany([Permission::SERVICE_ASSIGNEE_FILTER])
+    <!-- @canany([Permission::SERVICE_ASSIGNEE_FILTER])
         <div class="col-xl-6">
             <div class="card filter-card">
                 <div class="card-body pb-0 pt-3 row">
@@ -177,7 +180,22 @@
                 </div>
             </div>
         </div>
-    @endcanany
+    @endcanany -->
+    <div class="col-xl-4">
+        <div class="card filter-card">
+            <div class="card-body pb-0 pt-3 row">
+                <div class="col-lg-6">
+                    <x-admin.input type='number' name='amount_min' label='Min Amount' placeholder='Min' />
+                </div>
+                <div class="col-lg-6">
+                    <x-admin.input type='number' name='amount_max' label='Max Amount' placeholder='Max' />
+                </div>
+                <div class="col-12">
+                    <x-admin.checkbox name='exclude_amount_range' label='Exclude' />
+                </div>
+            </div>
+        </div>
+    </div>
     @can(Permission::STATUS_UNASSIGNED_SCAM_LIST)
         <div class="col-xl-6">
             <div class="card card-filter">

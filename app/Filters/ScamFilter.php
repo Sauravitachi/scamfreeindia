@@ -171,6 +171,13 @@ class ScamFilter
         }
 
         /**
+         * Amount Range Filter
+         */
+        if ($request->filled('amount_min') || $request->filled('amount_max')) {
+            self::amountRangeFilter($query, $request);
+        }
+
+        /**
          * Sales Status Filter
          */
         if ($request->filled('sales_status_id')) {
@@ -467,6 +474,31 @@ class ScamFilter
                 }
                 $q->{$reverse ? 'orWhereNotIn' : 'orWhereIn'}('sub_admin_id', $keyData);
             });
+        }
+    }
+
+    private static function amountRangeFilter(Builder $query, Request $request): void
+    {
+        $min = $request->input('amount_min');
+        $max = $request->input('amount_max');
+        $reverse = $request->boolean('exclude_amount_range');
+
+        if ($reverse) {
+            $query->where(function ($q) use ($min, $max) {
+                if (filled($min)) {
+                    $q->where('scam_amount', '<', $min);
+                }
+                if (filled($max)) {
+                    $q->orWhere('scam_amount', '>', $max);
+                }
+            });
+        } else {
+            if (filled($min)) {
+                $query->where('scam_amount', '>=', $min);
+            }
+            if (filled($max)) {
+                $query->where('scam_amount', '<=', $max);
+            }
         }
     }
 }
