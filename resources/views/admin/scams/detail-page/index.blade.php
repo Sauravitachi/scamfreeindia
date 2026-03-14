@@ -32,16 +32,17 @@
             @include('admin.scams.detail-page.components.scam-media')
         @endcanany
 
-        @if(!$userRole || $userRole === 'sales')
+
+        @if(auth()->user()->can(Permission::SALES_MANAGEMENT->value))
             @include('admin.scams.detail-page.components.status-lifecycle', [
                 'statusType' => ScamStatusType::SALES,
-                'causer' => !$userRole ? null : auth()->user()
+                'causer' => null
             ])
         @endif
-        @if(!$userRole || $userRole === 'drafting')
+        @if(auth()->user()->can(Permission::DRAFTING_MANAGEMENT->value))
             @include('admin.scams.detail-page.components.status-lifecycle', [
                 'statusType' => ScamStatusType::DRAFTING,
-                'causer' => !$userRole ? null : auth()->user()
+                'causer' => null
             ])
         @endif
 
