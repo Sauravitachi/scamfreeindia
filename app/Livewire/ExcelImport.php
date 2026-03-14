@@ -415,6 +415,28 @@ class ExcelImport extends Component
 
     }
 
+    private function parseDate($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        try {
+            if (is_numeric($value)) {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value)->format('Y-m-d H:i:s');
+            }
+            
+            // Handle d/m/Y format like 13/11/2025
+            if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}/', $value)) {
+                return \Carbon\Carbon::createFromFormat('d/m/Y', explode(' ', $value)[0])->startOfDay()->format('Y-m-d H:i:s');
+            }
+
+            return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
    private function parseAmount($value)
 
     {

@@ -63,6 +63,7 @@ class Scam extends Model
         'remark',
         'sub_admin_id',
         'sub_admin_assigned_at',
+        'created_at',
     ];
 
     /**
