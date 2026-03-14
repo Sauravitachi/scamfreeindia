@@ -319,9 +319,19 @@ class ScamService extends Service
                     $column => $assigneeId,
                 ]);
 
-                if ($scam->isDirty($column)) {
+                if ($type === 'sub_admin' && $assigneeId) {
 
-                    $scam->{"{$type}_assigned_at"} = now();
+                    $scam->fill([
+                        'sales_assignee_id' => null,
+                        'sales_status_id' => null,
+                    ]);
+                }
+
+                if ($scam->isDirty($column) || ($type === 'sub_admin' && $assigneeId && ($scam->isDirty('sales_assignee_id') || $scam->isDirty('sales_status_id')))) {
+
+                    if ($scam->isDirty($column)) {
+                        $scam->{"{$type}_assigned_at"} = now();
+                    }
 
                     $this->logScamActivityBeforeUpdate($scam);
 

@@ -64,15 +64,23 @@ class BulkAssignUsers
             if (! empty($update)) {
                 $scams->each(function (Scam $scam, int $index) use ($user, $update, $customerEnquiries): void {
 
+                    $scamUpdate = $update;
+
                     // locked status permission check
                     if ($scam->salesStatus?->is_lock && $user->cannot(Permission::UPDATE_LOCKED_SALES_STATUS)) {
-                        unset($update['sales_status_id']);
+                        unset($scamUpdate['sales_status_id']);
                     }
                     if ($scam->draftingStatus?->is_lock && $user->cannot(Permission::UPDATE_LOCKED_DRAFTING_STATUS)) {
-                        unset($update['drafting_status_id']);
+                        unset($scamUpdate['drafting_status_id']);
                     }
 
-                    $scam->fill($update);
+                    if (array_key_exists('sub_admin_id', $scamUpdate) && $scamUpdate['sub_admin_id'] !== null) {
+
+                        $scamUpdate['sales_assignee_id'] = null;
+                        $scamUpdate['sales_status_id'] = null;
+                    }
+
+                    $scam->fill($scamUpdate);
 
                     if (
                         $customerEnquiries?->isNotEmpty() &&
