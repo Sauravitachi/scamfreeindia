@@ -104,6 +104,7 @@
                                 <th>First Name</th>
                                 <th>Last Name</th>
                                 <th>Loss Amount</th>
+                                <th>Created At</th>
                                 <th>Ad ID</th>
                                 @if($showEditModal)
                                 <th width="80">Action</th>
@@ -132,6 +133,7 @@
                                     <td>{{ $row['first_name'] ?? '-' }}</td>
                                     <td>{{ $row['last_name'] ?? '-' }}</td>
                                     <td>{{ $row['your_loss_amount'] ? '₹ ' . number_format($row['your_loss_amount']) : '-' }}</td>
+                                    <td>{{ $row['created_at'] ?? '-' }}</td>
                                     <td>{{ $row['ad_id'] ?? '-' }}</td>
                                     @if($showEditModal)
                                     <td>
@@ -145,7 +147,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted">No data to preview</td>
+                                    <td colspan="9" class="text-center text-muted">No data to preview</td>
                                 </tr>
                             @endforelse
                         </tbody>

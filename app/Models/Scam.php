@@ -213,7 +213,8 @@ class Scam extends Model
     {
         return $this->sales_assignee_id == $user->id ||
             $this->drafting_assignee_id == $user->id ||
-            $this->service_assignee_id == $user->id;
+            $this->service_assignee_id == $user->id ||
+            $this->sub_admin_id == $user->id;
     }
 
     public function logActivity(string $description, ScamActivityEvent $event, ?Carbon $notifyAt = null): ScamActivity

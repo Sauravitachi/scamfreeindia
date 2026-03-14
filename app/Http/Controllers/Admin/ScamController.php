@@ -72,7 +72,8 @@ class ScamController extends \App\Foundation\Controller
     public static function middleware(): array
     {
         return [
-            permit(Permission::SCAM_LIST, only: ['index', 'show']),
+            permit(Permission::SCAM_LIST, only: ['index']),
+            permit([Permission::SCAM_LIST, Permission::SUB_ADMIN_MANAGEMENT], only: ['show']),
             permit(Permission::SCAM_CREATE, only: ['create', 'store']),
             permit(Permission::SCAM_UPDATE, only: ['edit', 'update']),
             permit(Permission::SCAM_DELETE, only: ['destroy']),
