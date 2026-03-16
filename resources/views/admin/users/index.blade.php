@@ -224,7 +224,7 @@
                             });
 
                             return `<select class="form-select form-select-sm sub-admin-id-select" data-id="${row.id}" onclick="event.stopPropagation()">
-                                    ${options}
+                                        ${options}
                             </select>`;
                         }
                     },

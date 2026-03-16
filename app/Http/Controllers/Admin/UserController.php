@@ -59,7 +59,7 @@ class UserController extends \App\Foundation\Controller implements HasMiddleware
         $this->activityLogService->visited('users');
 
         $roles = Role::orderBy('name', 'asc')->get(['id', 'name']);
-        $subAdminUsers = User::role('sub admin')->orderBy('name')->get(['id', 'name']);
+        $subAdminUsers = User::role('sub_admin')->orderBy('name')->get(['id', 'name']);
         return view('admin.users.index', compact('roles', 'subAdminUsers'));
     }
 

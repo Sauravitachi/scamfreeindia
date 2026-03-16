@@ -634,6 +634,14 @@
                                 let html = Action.getSalesStatusSelect(data, row.id);
                                 if(row.registered_amount > 0) {
                                     html += `<div class="mt-1 text-nowrap"><span class="badge bg-label-info">Reg. Amt: ${row.formatted_registered_amount}</span></div>`;
+                                    html += `<button 
+                                        class="btn btn-sm btn-outline-primary register-again-btn"
+                                        data-scam-id="${row.id}"
+                                        data-status-id="${data}"
+                                        title="Register Again"
+                                    >
+                                        <i class="ti ti-plus"></i>
+                                    </button>`;
                                 }
                                 return html;
                             },
@@ -902,6 +910,16 @@
                         $selectElement: $(this),
                         type: 'sales',
                         originalStatusId: $(this).data('sales-status'),
+                    });
+                });
+
+                // Register Again Button
+                $('#scams-table').on('click', '.register-again-btn', function() {
+                    const scamId = $(this).data('scam-id');
+                    const statusId = $(this).data('status-id');
+                    $(document).trigger('app:status-update-data-modal.open', {
+                        scamId: scamId,
+                        statusId: statusId
                     });
                 });
             @endif
