@@ -634,14 +634,16 @@
                                 let html = Action.getSalesStatusSelect(data, row.id);
                                 if(row.registered_amount > 0) {
                                     html += `<div class="mt-1 text-nowrap"><span class="badge bg-label-info">Reg. Amt: ${row.formatted_registered_amount}</span></div>`;
-                                    html += `<button 
-                                        class="btn btn-sm btn-outline-primary register-again-btn"
-                                        data-scam-id="${row.id}"
-                                        data-status-id="${data}"
-                                        title="Register Again"
-                                    >
-                                        <i class="ti ti-plus"></i>
-                                    </button>`;
+                                    if(userType !== 'drafting') {
+                                        html += `<button 
+                                            class="btn btn-sm btn-outline-primary register-again-btn"
+                                            data-scam-id="${row.id}"
+                                            data-status-id="${data}"
+                                            title="Register Again"
+                                        >
+                                            <i class="ti ti-plus"></i>
+                                        </button>`;
+                                    }
                                 }
                                 return html;
                             },
@@ -690,17 +692,7 @@
                             orderable: false,
                             render: function(data, type, row, meta) {
                                 let html = Action.getDraftingStatusSelect(data, row.id);
-                                if(row.registered_amount > 0) {
-                                    html += `<div class="mt-1 text-nowrap"><span class="badge bg-label-info">Reg. Amt: ${row.formatted_registered_amount}</span></div>`;
-                                    html += `<button 
-                                        class="btn btn-sm btn-outline-primary register-again-btn"
-                                        data-scam-id="${row.id}"
-                                        data-status-id="${data}"
-                                        title="Register Again"
-                                    >
-                                        <i class="ti ti-plus"></i>
-                                    </button>`;
-                                }
+                                
                                 return html;
                             },
                             createdCell: function(td, cellData, rowData, rowIndex, colIndex) {

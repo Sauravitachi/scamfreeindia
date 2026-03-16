@@ -25,6 +25,7 @@ class ScamTable
             return 'Drafting Assigned At';
         }
 
+       
         return 'Created At';
     }
 
