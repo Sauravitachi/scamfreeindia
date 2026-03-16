@@ -103,8 +103,7 @@
                                 <th>Phone</th>
                                 <th>First Name</th>
                                 <th>Last Name</th>
-                                <th>Loss Amount</th>
-                                <th>Created At</th>
+                                <th>Loss Amount</th>                                
                                 <th>Ad ID</th>
                                 @if($showEditModal)
                                 <th width="80">Action</th>
