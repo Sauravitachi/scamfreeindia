@@ -25,6 +25,7 @@ class ScamTable
             return 'Drafting Assigned At';
         }
 
+       
         return 'Created At';
     }
 
@@ -53,9 +54,9 @@ class ScamTable
         }
 
         if ($userType === 'drafting') {
-            $colId = 7;
+            $colId = 9;
         }
-
+        
         if ($user->can(Permission::SHOW_SCAM_SOURCE)) {
             $colId++;
         }
