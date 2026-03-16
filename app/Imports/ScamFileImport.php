@@ -10,7 +10,7 @@ class ScamFileImport implements ToCollection, WithHeadingRow
 {
     /**
      * Process the imported collection
-     * Expected columns: phone, first_name, last_name, full_name, your_loss_amount, ad_id, created_at
+     * Expected columns: phone, first_name, last_name, full_name, your_loss_amount, ad_id
      * 
      * @param Collection $collection
      */

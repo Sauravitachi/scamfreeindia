@@ -124,7 +124,6 @@ class ExcelImport extends Component
 
         $phone = $this->normalizePhone($row['phone'] ?? null);
         $amount = $this->parseAmount($row['your_loss_amount'] ?? null);
-        $createdAt = $this->parseDate($row['created_at'] ?? null);
         $firstName = $row['first_name'] ?? $row['full_name'] ?? null;
         $lastName = $row['last_name'] ?? null;
 
@@ -133,7 +132,6 @@ class ExcelImport extends Component
             'first_name' => $firstName ?? '',
             'last_name' => $lastName ?? '',
             'your_loss_amount' => $amount ?? 0,
-            'created_at' => $createdAt ?? null,
             'ad_id' => $row['ad_id'] ?? '',
             'skip' => false, // 🔥 never skip here
             'faulty' => !$phone,
@@ -248,7 +246,6 @@ class ExcelImport extends Component
         'scam_type_id' => 8,
         'scam_source_id' => $source?->id,
         'scam_amount' => $row['your_loss_amount'] ?? null,
-        'created_at' => $row['created_at'] ?? null,
         'customer_description' => null,
         'is_duplicate' => 0,
     ]);
@@ -354,7 +351,6 @@ class ExcelImport extends Component
         'scam_type_id' => 8,
         'scam_source_id' => $source,
         'scam_amount' => $row['your_loss_amount'] ?? null,
-        'created_at' => $row['created_at'] ?? null,
         'customer_description' => null,
         'is_duplicate' => 0,
     ]);
