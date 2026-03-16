@@ -157,9 +157,9 @@
                             'title' => 'Source',
                             'permit' => $pms->show_scam_source
                         ],
-                            ['title' => 'Remark'],
-                        ['title' => 'Sales Assignee', 'permit' => $pms->sales_management || $pms->service_access],
-                        ['title' => 'Sales Status', 'permit' => $pms->sales_access || $pms->service_access],
+                        ['title' => 'Remark'],
+                        ['title' => 'Sales Assignee', 'permit' => $pms->sales_management || $pms->service_access || $pms->drafting_access],
+                        ['title' => 'Sales Status', 'permit' => $pms->sales_access || $pms->service_access || $pms->drafting_access],
                         ['title' => 'Drafting Assignee', 'permit' => $pms->drafting_management || $pms->service_access],
                         ['title' => 'Drafting Status', 'permit' => $pms->drafting_access],
                         ['title' => 'Service Assignee', 'permit' => $pms->service_management],
@@ -552,7 +552,7 @@
                         }
                     },
                     
-                    @if ($pms->sales_management || $pms->service_access)
+                    @if ($pms->sales_management || $pms->service_access || $pms->drafting_access)
                         {
                             data: 'sales_assignee_id',
                             name: 'sales_assignee_id',
@@ -569,7 +569,7 @@
                             }
                         },
                     @endif
-                    @if ($pms->sales_access || $pms->service_access)
+                    @if ($pms->sales_access || $pms->service_access || $pms->drafting_access)
                         {
                             data: 'sales_status_id',
                             name: 'sales_status_id',
@@ -622,7 +622,19 @@
                             searchable: false,
                             orderable: false,
                             render: function(data, type, row, meta) {
-                                return Action.getDraftingStatusSelect(data, row.id);
+                                let html = Action.getDraftingStatusSelect(data, row.id);
+                                if(row.registered_amount > 0) {
+                                    html += `<div class="mt-1 text-nowrap"><span class="badge bg-label-info">Reg. Amt: ${row.formatted_registered_amount}</span></div>`;
+                                    html += `<button 
+                                        class="btn btn-sm btn-outline-primary register-again-btn"
+                                        data-scam-id="${row.id}"
+                                        data-status-id="${data}"
+                                        title="Register Again"
+                                    >
+                                        <i class="ti ti-plus"></i>
+                                    </button>`;
+                                }
+                                return html;
                             },
                             createdCell: function(td, cellData, rowData, rowIndex, colIndex) {
                                 const reviewStatus = rowData?.drafting_status_record?.review;
@@ -838,17 +850,17 @@
                         originalStatusId: $(this).data('sales-status'),
                     });
                 });
-
-                // Register Again Button
-                $('#scams-table').on('click', '.register-again-btn', function() {
-                    const scamId = $(this).data('scam-id');
-                    const statusId = $(this).data('status-id');
-                    $(document).trigger('app:status-update-data-modal.open', {
-                        scamId: scamId,
-                        statusId: statusId
-                    });
-                });
             @endif
+
+            // Register Again Button
+            $('#scams-table').on('click', '.register-again-btn', function() {
+                const scamId = $(this).data('scam-id');
+                const statusId = $(this).data('status-id');
+                $(document).trigger('app:status-update-data-modal.open', {
+                    scamId: scamId,
+                    statusId: statusId
+                });
+            });
 
             @if ($pms->sub_admin_management)
                 // Sub-Admin Assignee Select
