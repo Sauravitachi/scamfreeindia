@@ -37,8 +37,7 @@ class ScamStatusRegisteredNotification extends Notification
         )
     );
 
-    // Explicit check: only 'fireworks' if amount is strictly greater than 4999
-    if ($amount > 4999) {
+    if ($amount > 2999) {
         $data['type'] = 'fireworks';
     } else {
         $data['type'] = 'normal';
