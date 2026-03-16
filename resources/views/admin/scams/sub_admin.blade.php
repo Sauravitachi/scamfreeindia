@@ -423,7 +423,7 @@
                     }
                 },
                 order: [
-                    [@js($scamTableView->getOrderColumnId($user)), 'desc'] // created_at
+                    [@js($scamTableView->getOrderColumnId($user, true)), 'desc'] // created_at
                 ],
                 oLanguage: {
                     sLengthMenu: "_MENU_ entries per page",
