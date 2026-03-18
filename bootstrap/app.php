@@ -13,6 +13,7 @@ $app->withRouting(
         __DIR__.'/../routes/admin.php',
         __DIR__.'/../routes/customer.php',
     ],
+    api: __DIR__.'/../routes/api.php',
     commands: __DIR__.'/../routes/console.php',
     health: '/up',
 );
