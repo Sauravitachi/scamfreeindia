@@ -88,7 +88,7 @@
                         ['title' => 'Scam Amount'],
                         ['title' => 'Sales Assignee', 'permit' => $userType === 'sales' || $userType === 'admin', 'visible' => $assigneeType === 'sales'],
                         ['title' => 'Sales Enquiry Status', 'permit' => $userType === 'sales' || $userType === 'admin', 'visible' => $assigneeType === 'sales'],
-                        ['title' => 'Drafting Assignee', 'permit' => $userType === 'drafting' || $userType === 'admin', 'visible' => $assigneeType === 'drafting' ||  $userType == 'admin'],
+                        ['title' => 'Drafting Assignee', 'permit' => $userType === 'drafting' || $userType === 'admin', 'visible' => $assigneeType === 'drafting'],
                         ['title' => 'Drafting Enquiry Status', 'permit' => $userType === 'drafting' || $userType === 'admin', 'visible' => $assigneeType === 'drafting'],
                         ['title' => 'Case Sales Status', 'permit' => $userType === 'sales' || $userType === 'admin', 'visible' => $assigneeType === 'sales'],
                         ['title' => 'Case Drafting Status', 'permit' => $userType === 'drafting' || $userType === 'admin', 'visible' => $assigneeType === 'drafting'],
@@ -293,7 +293,7 @@
                 }
             },
             order: [
-                [{{  ($userType == 'admin' && $assigneeType === 'sales')  ? '10' : '9'  }}, 'desc'] // created_at
+                [9, 'desc'] // created_at
             ],
             oLanguage: {
                 sLengthMenu: "_MENU_ entries per page",
@@ -408,7 +408,7 @@
                     }
                 },
                 @endif
-                @if (($assigneeType === 'drafting' || $userType === 'admin') && ($userType === 'drafting' || $userType === 'admin'))
+                @if ($assigneeType === 'drafting' && ($userType === 'drafting' || $userType === 'admin'))
                 {
                     data: 'drafting_assignee_id',
                     name: 'drafting_assignee_id',

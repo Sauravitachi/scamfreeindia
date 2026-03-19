@@ -85,9 +85,18 @@ class CustomerEnquiryService extends Service
                     $query->whereNull('manually_assigned_at');
                 }
             }
+
+            if ($request->filled('assigneeType')) {
+                $bypassed = $request->boolean('bypassed', false);
+                if ($request->assigneeType === 'sales') {
+                    $query->whereSalesAssignee(bypassed: $bypassed);
+                } else {
+                    $query->whereDraftingAssignee(bypassed: $bypassed);
+                }
+            }
         }
 
-        CustomerEnquiryFilter::apply($query);
+        CustomerEnquiryFilter::apply($query, $request);
 
         $table = datatables()->eloquent($query);
 

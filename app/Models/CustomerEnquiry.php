@@ -54,7 +54,7 @@ class CustomerEnquiry extends Model
         });
     }
 
-    public static function scopeWhereSalesAssignee(Builder $query, null|array|int $user_id = null, bool $exclude = false, bool $bypassed = false): void
+    public function scopeWhereSalesAssignee(Builder $query, null|array|int $user_id = null, bool $exclude = false, bool $bypassed = false): void
     {
         $query->whereHas('customer.scams', function (Builder $q) use ($user_id, $exclude, $bypassed): void {
             $q->where('is_duplicate', false);
@@ -70,6 +70,7 @@ class CustomerEnquiry extends Model
                         });
                 });
             }
+
             if ($user_id !== null) {
                 if (is_array($user_id)) {
                     $q->{$exclude ? 'whereNotIn' : 'whereIn'}('sales_assignee_id', $user_id);
@@ -78,12 +79,12 @@ class CustomerEnquiry extends Model
                 }
                 $q->whereNull('drafting_assignee_id');
             } else {
-                $q->whereNotNull('sales_assignee_id')->whereNull('drafting_assignee_id');
+                $q->whereNull('drafting_assignee_id');
             }
         });
     }
 
-    public static function scopeWhereDraftingAssignee(Builder $query, null|array|int $user_id = null, bool $exclude = false, bool $bypassed = false): void
+    public function scopeWhereDraftingAssignee(Builder $query, null|array|int $user_id = null, bool $exclude = false, bool $bypassed = false): void
     {
         $query->whereHas('customer.scams', function (Builder $q) use ($user_id, $exclude, $bypassed): void {
             $q->where('is_duplicate', false);

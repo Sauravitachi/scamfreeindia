@@ -68,18 +68,24 @@ class AdminSidebar extends Sidebar
                 $this->addSubmenu(title: 'Scam Leads', url: route('admin.scam-leads.index'));
             }
 
-            if ($this->user->hasPermissionTo(Permission::CUSTOMER_ENQUIRY_LIST->value)) {
+        if ($this->user->hasPermissionTo(Permission::CUSTOMER_ENQUIRY_LIST->value)) {
 
-                if ($userRole === 'drafting') {
-                    $this->addSubmenu(title: 'Drafting Escalations', url: route('admin.customer-enquiries.index', ['type' => 'drafting']));
-                } elseif ($userRole === 'sales') {
-                    $this->addSubmenu(title: 'Sales Enquiries', url: route('admin.customer-enquiries.index', ['type' => 'sales']));
-                } else {
-                    $this->addSubmenu(title: 'Sales Enquiries', url: route('admin.customer-enquiries.index', ['type' => 'sales']));
-                    $this->addSubmenu(title: 'Drafting Escalations', url: route('admin.customer-enquiries.index', ['type' => 'drafting']));
-                }
+            $isSales = $userRole === 'sales' || \App\Models\CustomerEnquiry::whereSalesAssignee($this->user->id)->exists();
+            $isDrafting = $userRole === 'drafting' || \App\Models\CustomerEnquiry::whereDraftingAssignee($this->user->id)->exists();
 
+            if ($userRole === 'admin') {
+                $isSales = true;
+                $isDrafting = true;
             }
+
+            if ($isSales) {
+                $this->addSubmenu(title: 'Sales Enquiries', url: route('admin.customer-enquiries.index', ['type' => 'sales']));
+            }
+
+            if ($isDrafting) {
+                $this->addSubmenu(title: 'Drafting Escalations', url: route('admin.customer-enquiries.index', ['type' => 'drafting']));
+            }
+        }
 
             if ($this->user->canAny([Permission::ESCALATION_LIST->value, Permission::ESCALATION_LIST_SELF->value])) {
                 $this->addSubmenu(title: 'Internal Escalations', url: route('admin.escalations.index'));

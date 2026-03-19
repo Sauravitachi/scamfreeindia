@@ -7,22 +7,10 @@ use Illuminate\Http\Request;
 
 class CustomerEnquiryFilter
 {
-    public static function apply(Builder $query)
+    public static function apply(Builder $query, Request $request)
     {
-        $request = request();
-
         $bypassed = $request->boolean('bypassed', false);
         // Filters
-        $query->when(
-            $request->filled('assigneeType'),
-            function (Builder $q) use ($request, $bypassed) {
-                if ($request->assigneeType === 'sales') {
-                    $q->whereSalesAssignee(bypassed: $bypassed);
-                } else {
-                    $q->whereDraftingAssignee(bypassed: $bypassed);
-                }
-            }
-        );
 
         $query->when(
             $request->filled('sales_assignee_id'),
