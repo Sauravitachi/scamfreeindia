@@ -160,13 +160,9 @@ class User extends Authenticatable implements UserDetailTextContract
 
     public function getRoleString(): ?string
     {
-        if ($this->roles->first()?->id === config('settings.sales_role_id')) {
-            return 'sales';
-        } elseif ($this->roles->first()?->id === config('settings.drafting_role_id')) {
-            return 'drafting';
-        }
+        $type = $this->userType();
 
-        return null;
+        return in_array($type, ['sales', 'drafting']) ? $type : null;
     }
 
     public static function getByUsername(string $username, array|string $columns = ['*']): ?User
