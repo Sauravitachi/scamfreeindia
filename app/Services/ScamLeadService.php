@@ -440,39 +440,34 @@ class ScamLeadService extends Service
             'scams' => fn (HasMany $q): HasMany => $q->with([
                 'salesAssignee:id',
                 'draftingAssignee:id',
+                'subAdmin:id',
                 'salesStatus:id,customer_enquiry_notify_role_id,bypass_enquiry',
                 'draftingStatus:id,customer_enquiry_notify_role_id,bypass_enquiry',
-            ])->latest(),
+            ])->where('is_duplicate', false)->latest()->limit(1),
         ]);
+
+        $latestScam = $customer->scams->first();
+
+        if (! $latestScam) {
+            return;
+        }
 
         $notifyTo = collect();
 
-        foreach ($customer->scams as $scam) {
-
-            if (! $scam->draftingAssignee && ! $scam->salesAssignee) {
-                continue;
+        if ($latestScam->draftingAssignee) {
+            if (! $latestScam->draftingStatus?->bypass_enquiry) {
+                $notifyTo->push($latestScam->draftingAssignee);
             }
-
-            $role = $scam->draftingAssignee
-                ? Role::whereId($scam->draftingStatus?->customer_enquiry_notify_role_id)->first()
-                : Role::whereId($scam->salesStatus?->customer_enquiry_notify_role_id)->first();
-
-            if ($role) {
-                $roleUserType = userType($role);
-            } else {
-                $roleUserType = $scam->draftingAssignee ? 'drafting' : 'sales';
+        } elseif ($latestScam->salesAssignee) {
+            if (! $latestScam->salesStatus?->bypass_enquiry) {
+                $notifyTo->push($latestScam->salesAssignee);
             }
-
-            match ($roleUserType) {
-                'drafting' => $scam->draftingStatus?->bypass_enquiry ? null : $notifyTo->push($scam->draftingAssignee),
-                'sales' => $scam->salesStatus?->bypass_enquiry ? null : $notifyTo->push($scam->salesAssignee),
-                default => User::whereHas('roles', fn (Builder $q) => $q->where('id', $role->id))
-                    ->get(['id'])
-                    ->each(fn ($user) => $notifyTo->push($user))
-            };
+        } elseif ($latestScam->subAdmin) {
+            $notifyTo->push($latestScam->subAdmin);
         }
 
-
-        Notification::sendNow($notifyTo->unique(), new CustomerEnquiryNotification($enquiry));
+        if ($notifyTo->isNotEmpty()) {
+            Notification::sendNow($notifyTo->unique(), new CustomerEnquiryNotification($enquiry));
+        }
     }
 }

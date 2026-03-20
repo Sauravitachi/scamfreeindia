@@ -7,7 +7,7 @@ const path = require('path');
 const API_URL = 'http://127.0.0.1:8000/api/whatsapp/lead';
 const BOT_NAME = 'ScamFree India WhatsApp Bot';
 const LOG_FILE = path.join(__dirname, 'bot.log');
-const TIMEOUT = 10000;
+const TIMEOUT = 15000;
 
 function log(level, message, data = null) {
     const timestamp = new Date().toISOString();
@@ -45,11 +45,25 @@ client.on('message', async (msg) => {
     try {
         if (msg.from === 'status@broadcast') return;
         if (msg.from.includes('@g.us')) return;
-        if (!msg.body) return;
         if (msg.fromMe) return;
 
-        const contact = await msg.getContact();
+        // Handle media messages even if they don't have a text body (voice, image, etc.)
+        let messageBody = msg.body || '';
+        if (!messageBody && msg.hasMedia) {
+            messageBody = `[Media: ${msg.type || 'Media'}]`;
+        }
 
+        // If it's still empty and not media, check if it's a dynamic reply or list response
+        if (!messageBody) {
+             if (msg.selectedButtonId || msg.selectedRowId) {
+                messageBody = `[Button/List Selection: ${msg.selectedButtonId || msg.selectedRowId}]`;
+             } else {
+                log('DEBUG', 'Ignoring message with no body and no media', { type: msg.type });
+                return;
+             }
+        }
+
+        const contact = await msg.getContact();
         let phone = contact.number;
 
         if (!phone) {
@@ -58,26 +72,28 @@ client.on('message', async (msg) => {
 
         phone = phone.replace(/\D/g, '');
 
+        // Clean WhatsApp 91 prefix for India numbers
         if (phone.length > 10 && phone.startsWith('91')) {
             phone = phone.slice(-10);
         }
 
         const name = contact.pushname || contact.name || 'Unknown';
 
-        if (!phone || phone.length !== 10) {
-            log('WARN', 'Invalid phone after cleaning', { phone });
+        // Relaxed phone check: allow 10-15 digit numbers (to support international or long formats)
+        if (!phone || phone.length < 10) {
+            log('WARN', 'Invalid phone number format or too short', { phone, type: msg.type });
             return;
         }
 
-        log('INFO', `📩 Message from ${phone}`);
+        log('INFO', `📩 Incoming ${msg.type} from ${phone}: ${messageBody.substring(0, 50)}${messageBody.length > 50 ? '...' : ''}`);
 
         await axios.post(API_URL, {
             phone: phone,
-            message: msg.body,
+            message: messageBody,
             name: name
-        });
+        }, { timeout: TIMEOUT });
 
-        log('INFO', `✅ Lead sent: ${phone}`);
+        log('INFO', `✅ Lead stored: ${phone}`);
 
     } catch (err) {
         log('ERROR', 'Message processing error', err.message);

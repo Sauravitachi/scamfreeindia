@@ -11,7 +11,7 @@ class WhatsAppLeadController extends Controller
 {
     public function store(Request $request)
     {
-        Log::info('WhatsApp Lead:', $request->all());
+        Log::info('WhatsApp Lead Incoming:', $request->all());
 
         $request->validate([
             'phone' => 'required|string',
@@ -21,41 +21,52 @@ class WhatsAppLeadController extends Controller
 
         try {
             $phone = preg_replace('/\D/', '', $request->phone);
-
-            // 🔥 DUPLICATE CHECK
-            $existing = ScamLead::where('phone_number', $phone)->first();
-
-            if ($existing) {
-                $existing->increment('count');
-                $existing->update([
-                    'is_duplicate' => 1,
-                    'customer_description' => $request->message
-                ]);
-
-                return response()->json([
-                    'status' => 'duplicate updated'
-                ]);
-            }
-
-            // CREATE NEW
-            ScamLead::create([
+            
+            $scamLead = new ScamLead([
                 'phone_number' => $phone,
                 'customer_description' => $request->message,
                 'name' => $request->name,
-                'country_code' => 'IN',
-                'dial_code' => '+91',
                 'scam_source_id' => 2, // WhatsApp
             ]);
 
-            return response()->json([
-                'status' => 'success'
-            ]);
+            $service = \App\Services\ScamLeadService::getInstance();
+            $service->fixCountryCodeForIndia($scamLead);
+
+            // Check if customer already exists (transferred lead)
+            $customer = \App\Models\Customer::wherePhoneDetails($scamLead->phone_number, $scamLead->country_code ?? 'in')->first();
+
+            if ($customer) {
+                // For existing customers, create a guest enquiry rather than a lead
+                $service->createCustomerEnquiry($customer, 'whatsapp', $request->message);
+                
+                return response()->json(['status' => 'enquiry recorded']);
+            }
+
+            // check for existing lead (duplicate check with 1-min debounce)
+            $existingLead = ScamLead::wherePhoneDetails($scamLead->phone_number, $scamLead->country_code ?? 'in')
+                ->where('created_at', '>=', now()->subMinutes(1))
+                ->first();
+
+            if ($existingLead) {
+                $existingLead->update([
+                    'customer_description' => $request->message,
+                    'name' => $request->name ?: $existingLead->name
+                ]);
+
+                return response()->json(['status' => 'lead updated']);
+            }
+
+            // Create new lead (syncing is handled by model observers)
+            $scamLead->save();
+
+            return response()->json(['status' => 'success']);
 
         } catch (\Exception $e) {
-            Log::error('WhatsApp Error: ' . $e->getMessage());
+            Log::error('WhatsApp Lead Error: ' . $e->getMessage());
 
             return response()->json([
-                'status' => 'error'
+                'status' => 'error',
+                'description' => 'Something went wrong while processing the lead.'
             ], 500);
         }
     }
