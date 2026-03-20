@@ -49,7 +49,11 @@ class ScamLead extends Model
     protected static function booted(): void
     {
 
-        static::creating(function (ScamLead $scamLead): void {
+        static::creating(function (ScamLead $scamLead) {
+
+            if (ScamLeadService::getInstance()->isBypassedNumber($scamLead->phone_number)) {
+                return false;
+            }
 
             if ($scamLead->country_code === null) {
                 $scamLead->country_code = 'in';

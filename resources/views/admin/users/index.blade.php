@@ -63,6 +63,7 @@
         @include('admin.users._user_details_offcanvas')
         @include('admin.users._change_password_modal')
         @include('admin.users._force_release_freeze_modal')
+        @include('admin.users._set_target_modal')
 
     </div>
 @endsection
@@ -87,9 +88,11 @@
                 'deleteUrl' => route('admin.users.destroy', ':id'),
                 'loginAsUserUrl' => route('admin.users.login-as-user', ':id'),
                 'updatePreferenceUrl' => route('admin.users.update-preference', ':id'),
+                'setTargetUrl' => route('admin.users.set-target', ':id'),
                 'canEdit' => auth()->user()->can(Permission::UPDATE_ALL_USERS_DETAILS),
                 'canDelete' => auth()->user()->can(Permission::USER_DELETE),
-                'canLoginAsUser' => auth()->user()->can(Permission::LOGIN_AS_USER) && !session()->has('user_login')
+                'canLoginAsUser' => auth()->user()->can(Permission::LOGIN_AS_USER) && !session()->has('user_login'),
+                'canSetTarget' => auth()->user()->can(Permission::SUB_ADMIN_MANAGEMENT), // Using this for now
             ]),
             edit: function(id) {
                 if (!Action.canEdit)
@@ -105,6 +108,11 @@
             loginAsUser: function(id) {
                 return Action.canLoginAsUser && (Action.user_id !== id) ?
                     `<a href="javascript:;" data-login-id="${id}" class="cursor-pointer mx-1"><i class="ti ti-login-2 text-warning h1"></i></a>` :
+                    ``;
+            },
+            setTarget: function(id, userType) {
+                return Action.canSetTarget && ['sales', 'drafting'].includes(userType) ?
+                    `<a href="javascript:;" onclick="SetTargetModule.open(${id})" class="cursor-pointer mx-1"><i class="ti ti-target text-success h1"></i></a>` :
                     ``;
             }
         };
@@ -239,7 +247,7 @@
                         data: 'id',
                         name: 'id',
                         render: function(data, type, row, meta) {
-                            return Action.loginAsUser(data) + Action.edit(data) + Action.delete(data);
+                            return Action.loginAsUser(data) + Action.setTarget(data, row.user_type) + Action.edit(data) + Action.delete(data);
                         }
                     },
                 ],

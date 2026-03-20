@@ -29,13 +29,34 @@ class DashboardService extends Service
             ->limit(5)
             ->latest()->get();
 
+        $getUsersWithTargets = function ($scopeQuery) {
+            return $scopeQuery->where('status', true)
+                ->with('salesTargets')
+                ->get()
+                ->map(function ($user) {
+                    $target = $user->currentTarget;
+                    if ($target) {
+                        $actual = $user->getActualSalesAmount($target->starts_at, $target->ends_at);
+                        $rawPercent = $target->target_amount > 0 ? round(($actual / $target->target_amount) * 100, 2) : 0;
+                        
+                        $user->setAttribute('current_target', $target);
+                        $user->setAttribute('actual_sales', $actual);
+                        $user->setAttribute('progress_percent', min(100, $rawPercent));
+                        $user->setAttribute('raw_progress_percent', $rawPercent);
+                    } else {
+                        $user->setAttribute('raw_progress_percent', -1); // Users without targets go to bottom
+                    }
+                    return $user;
+                })->sortByDesc('raw_progress_percent');
+        };
+
         return [
 
             'stat' => $this->stat(),
 
-            'salesUsers' => User::whereSales()->orderBy('name')->get(['id', 'username', 'name']),
+            'salesUsers' => $getUsersWithTargets(User::whereSales()),
 
-            'draftingUsers' => User::whereDrafting()->orderBy('name')->get(['id', 'username', 'name']),
+            'draftingUsers' => $getUsersWithTargets(User::whereDrafting()),
 
             'recentScams' => $recentScams,
 

@@ -299,4 +299,26 @@ class UserController extends \App\Foundation\Controller implements HasMiddleware
 
         return $this->responseService->json(success: true, message: 'Preference updated!');
     }
+
+    public function setTarget(Request $request, User $user): JsonResponse
+    {
+        $data = $request->validate([
+            'target_amount' => 'required|numeric|min:0',
+            'starts_at' => 'required|date',
+            'ends_at' => 'required|date|after_or_equal:starts_at',
+            'period_type' => 'required|string|in:monthly,weekly,daily',
+        ]);
+
+        $user->salesTargets()->updateOrCreate(
+            [
+                'starts_at' => $data['starts_at'],
+                'ends_at' => $data['ends_at'],
+            ],
+            $data
+        );
+
+        $this->activityLogService->updated("user sales target", $user);
+
+        return $this->responseService->json(success: true, message: 'Sales target updated!');
+    }
 }

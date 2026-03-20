@@ -22,6 +22,12 @@ class WhatsAppLeadController extends Controller
         try {
             $phone = preg_replace('/\D/', '', $request->phone);
             
+            $service = \App\Services\ScamLeadService::getInstance();
+
+            // Check if number is bypassed
+            if ($service->isBypassedNumber($phone)) {
+                return response()->json(['status' => 'success', 'description' => 'number bypassed']);
+            }
             $scamLead = new ScamLead([
                 'phone_number' => $phone,
                 'customer_description' => $request->message,

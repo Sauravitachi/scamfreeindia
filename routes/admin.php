@@ -59,6 +59,7 @@ $routes = function () {
             Route::post('login-back-to-user', 'loginBackToUser')->name('login-back-to-user');
             Route::get('{user}/assignee-status', 'assigneeStatus')->name('assignee-status');
             Route::post('{user}/update-preference', [UserController::class, 'updatePreference'])->name('update-preference');
+            Route::post('{user}/set-target', 'setTarget')->name('set-target');
         });
         Route::resource('users', UserController::class);
         Route::prefix('profile')->as('profile.')->group(function () {

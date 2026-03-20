@@ -385,6 +385,11 @@ class ScamLeadService extends Service
                 default: fn (): ScamSource => ScamSource::webhookSource(['id'])
             );
 
+            // Bypass check
+            if ($this->isBypassedNumber($request->phone_number)) {
+                return;
+            }
+
             $scamLead = new ScamLead([
                 ...$request->validated(),
                 'scam_source_id' => $scamSource?->id ?? null,
@@ -469,5 +474,34 @@ class ScamLeadService extends Service
         if ($notifyTo->isNotEmpty()) {
             Notification::sendNow($notifyTo->unique(), new CustomerEnquiryNotification($enquiry));
         }
+    }
+
+    public function isBypassedNumber(?string $phoneNumber): bool
+    {
+        if (! $phoneNumber) {
+            return false;
+        }
+
+        $phoneNumber = preg_replace('/\D/', '', $phoneNumber);
+
+        // Remove 91 Prefix for comparison
+        if (str_starts_with($phoneNumber, '91') && strlen($phoneNumber) > 10) {
+            $phoneNumber = substr($phoneNumber, 2);
+        }
+
+        $bypassedNumbers = config('settings.bypassed_phone_numbers', []);
+
+        if (empty($bypassedNumbers)) {
+            return false;
+        }
+
+        return collect($bypassedNumbers)->map(function ($n) {
+            $n = preg_replace('/\D/', '', $n);
+            if (str_starts_with($n, '91') && strlen($n) > 10) {
+                return substr($n, 2);
+            }
+
+            return $n;
+        })->contains($phoneNumber);
     }
 }

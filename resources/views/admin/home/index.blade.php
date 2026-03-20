@@ -42,6 +42,7 @@
         @include('admin.home.components.scam-stats')
     @endcan
 
+    
     @canany([
         Permission::DASHBOARD_TOTAL_SCAMS_CHART
     ])
@@ -50,11 +51,11 @@
                 <div class="col-lg-4">
                     @include('admin.home.components.scam-count')
                 </div>
-            @endcan
-        </div>
-    @endcanany
-
-    <div class="row gy-3 mb-4">
+                @endcan
+            </div>
+            @endcanany
+            
+            <div class="row gy-3 mb-4">
 
         @can(Permission::DASHBOARD_SALES_STATUS_STATS)
             <div class="col-xl-6">
@@ -75,7 +76,8 @@
         @endcan
         
     </div>
-
+    
+    @include('admin.home.components.sales-user-target')
     @canany([
         Permission::DASHBOARD_CUSTOMERS_BY_REGION_CHART,
         Permission::DASHBOARD_SCAMS_BY_SOURCE_CHART,

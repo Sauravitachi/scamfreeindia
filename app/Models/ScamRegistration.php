@@ -41,4 +41,9 @@ class ScamRegistration extends Model
     {
         return $this->belongsTo(ScamRegistrationAmount::class, 'scam_registration_amount_id');
     }
+
+    public function scam(): BelongsTo
+    {
+        return $this->belongsTo(Scam::class);
+    }
 }

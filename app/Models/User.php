@@ -26,6 +26,7 @@ use Rinvex\Country\CountryLoader;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Role as SpatieRole;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\ScamRegistration;
 
 class User extends Authenticatable implements UserDetailTextContract
 {
@@ -375,5 +376,47 @@ class User extends Authenticatable implements UserDetailTextContract
     public function customerEnquiryFreezes(): HasOne
     {
         return $this->hasOne(CustomerEnquiryFreeze::class);
+    }
+
+    /**
+     * Get sales targets for the user
+     */
+    public function salesTargets(): HasMany
+    {
+        return $this->hasMany(UserSalesTarget::class);
+    }
+
+    /**
+     * Get the current active sales target
+     */
+    public function getCurrentTargetAttribute(): ?UserSalesTarget
+    {
+        return $this->salesTargets()
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->first();
+    }
+
+    /**
+     * Get actual sales amount for a given period
+     */
+    public function getActualSalesAmount($startsAt, $endsAt): float
+    {
+        $role = $this->getRoleString();
+        $column = "{$role}_assignee_id";
+
+        if (!in_array($role, ['sales', 'drafting'])) {
+            return 0;
+        }
+
+        return (float) ScamRegistration::whereHas('scam', function ($query) use ($column) {
+            $query->where($column, $this->id);
+        })
+        ->whereBetween('caused_at', [$startsAt, $endsAt])
+        ->with('scamRegistrationAmount')
+        ->get()
+        ->sum(function ($registration) {
+            return $registration->scamRegistrationAmount?->amount ?? 0;
+        });
     }
 }
