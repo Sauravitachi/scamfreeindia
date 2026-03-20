@@ -4,7 +4,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const API_URL = 'http://127.0.0.1:8000/api/whatsapp/lead';
+const API_URL = 'http://192.168.1.13/api/whatsapp/lead';
 const BOT_NAME = 'ScamFree India WhatsApp Bot';
 const LOG_FILE = path.join(__dirname, 'bot.log');
 const TIMEOUT = 15000;

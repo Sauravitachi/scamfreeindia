@@ -5,14 +5,10 @@ namespace App\Notifications;
 use App\Models\CustomerEnquiry;
 use App\Services\CustomerEnquiryService;
 use App\Utilities\Structure;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class CustomerEnquiryNotification extends Notification implements ShouldQueue
+class CustomerEnquiryNotification extends Notification
 {
-    use Queueable;
-
     /**
      * Create a new notification instance.
      */
