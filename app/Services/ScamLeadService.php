@@ -437,105 +437,38 @@ class ScamLeadService extends Service
 
     private function sendCustomerEnquiryUserNotification(Customer $customer, CustomerEnquiry $enquiry): void
     {
-        try {
-            Log::info('Starting sendCustomerEnquiryUserNotification', [
-                'customer_id' => $customer->id,
-                'enquiry_id' => $enquiry->id,
-            ]);
+        $customer->load([
+            'scams' => fn (HasMany $q): HasMany => $q->with([
+                'salesAssignee:id',
+                'draftingAssignee:id',
+                'subAdmin:id',
+                'salesStatus:id,customer_enquiry_notify_role_id,bypass_enquiry',
+                'draftingStatus:id,customer_enquiry_notify_role_id,bypass_enquiry',
+            ])->where('is_duplicate', false)->latest()->limit(1),
+        ]);
 
-            $customer->load([
-                'scams' => fn (HasMany $q): HasMany => $q->with([
-                    'salesAssignee:id,name,username',
-                    'draftingAssignee:id,name,username',
-                    'salesStatus:id,customer_enquiry_notify_role_id,bypass_enquiry',
-                    'draftingStatus:id,customer_enquiry_notify_role_id,bypass_enquiry',
-                ])->latest(),
-            ]);
+        $latestScam = $customer->scams->first();
 
-            Log::info('Customer scams loaded', [
-                'scam_count' => $customer->scams->count(),
-            ]);
+        if (! $latestScam) {
+            return;
+        }
 
-            $notifyTo = collect();
+        $notifyTo = collect();
 
-            foreach ($customer->scams as $scam) {
-                Log::info('Processing scam', [
-                    'scam_id' => $scam->id,
-                    'sales_assignee_id' => $scam->sales_assignee_id,
-                    'drafting_assignee_id' => $scam->drafting_assignee_id,
-                    'sales_bypass' => $scam->salesStatus?->bypass_enquiry ?? false,
-                    'drafting_bypass' => $scam->draftingStatus?->bypass_enquiry ?? false,
-                ]);
-
-                // Notify Sales Assignee (unless bypassed)
-                if ($scam->salesAssignee && ! ($scam->salesStatus?->bypass_enquiry ?? false)) {
-                    Log::info('Adding sales assignee to notification', [
-                        'sales_assignee_id' => $scam->salesAssignee->id,
-                        'sales_assignee_name' => $scam->salesAssignee->name,
-                    ]);
-                    $salesRole = Role::find($scam->salesStatus?->customer_enquiry_notify_role_id);
-                    if ($salesRole) {
-                        $salesRoleUserType = userType($salesRole);
-                        if ($salesRoleUserType === 'sales') {
-                            $notifyTo->push($scam->salesAssignee);
-                        } else {
-                            User::role($salesRole->name)->get(['id'])->each(fn ($user) => $notifyTo->push($user));
-                        }
-                    } else {
-                        $notifyTo->push($scam->salesAssignee);
-                    }
-                }
-
-                // Notify Drafting Assignee (unless bypassed)
-                if ($scam->draftingAssignee && ! ($scam->draftingStatus?->bypass_enquiry ?? false)) {
-                    Log::info('Adding drafting assignee to notification', [
-                        'drafting_assignee_id' => $scam->draftingAssignee->id,
-                        'drafting_assignee_name' => $scam->draftingAssignee->name,
-                    ]);
-                    $draftingRole = Role::find($scam->draftingStatus?->customer_enquiry_notify_role_id);
-                    if ($draftingRole) {
-                        $draftingRoleUserType = userType($draftingRole);
-                        if ($draftingRoleUserType === 'drafting') {
-                            $notifyTo->push($scam->draftingAssignee);
-                        } else {
-                            User::role($draftingRole->name)->get(['id'])->each(fn ($user) => $notifyTo->push($user));
-                        }
-                    } else {
-                        $notifyTo->push($scam->draftingAssignee);
-                    }
-                }
+        if ($latestScam->draftingAssignee) {
+            if (! $latestScam->draftingStatus?->bypass_enquiry) {
+                $notifyTo->push($latestScam->draftingAssignee);
             }
-
-            $uniqueUsers = $notifyTo->unique();
-            Log::info('Unique users to notify', [
-                'user_count' => $uniqueUsers->count(),
-                'user_ids' => $uniqueUsers->pluck('id')->toArray(),
-            ]);
-
-            if ($uniqueUsers->isEmpty()) {
-                Log::info('No assigned users found, notifying Sales Executives');
-                User::role('Sales Executive')->get(['id'])->each(fn ($user) => $uniqueUsers->push($user));
-                Log::info('Sales Executives added', [
-                    'user_count' => $uniqueUsers->count(),
-                ]);
+        } elseif ($latestScam->salesAssignee) {
+            if (! $latestScam->salesStatus?->bypass_enquiry) {
+                $notifyTo->push($latestScam->salesAssignee);
             }
+        } elseif ($latestScam->subAdmin) {
+            $notifyTo->push($latestScam->subAdmin);
+        }
 
-            if ($uniqueUsers->isNotEmpty()) {
-                Log::info('Sending notifications', [
-                    'user_count' => $uniqueUsers->count(),
-                ]);
-                Notification::sendNow($uniqueUsers, new CustomerEnquiryNotification($enquiry));
-                Log::info('Notifications sent successfully');
-            } else {
-                Log::warning('No users to notify for enquiry', [
-                    'enquiry_id' => $enquiry->id,
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error sending customer enquiry notification', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        if ($notifyTo->isNotEmpty()) {
+            Notification::sendNow($notifyTo->unique(), new CustomerEnquiryNotification($enquiry));
         }
     }
 }
