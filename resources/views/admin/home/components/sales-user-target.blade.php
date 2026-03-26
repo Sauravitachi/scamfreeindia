@@ -1,4 +1,7 @@
+@use(\App\Constants\Permission)
+
 @php /** @var \App\DTO\DashboardStats $stat */ @endphp
+
 
 <div class="row mb-4 gy-4">
     <!-- Sales Targets -->
@@ -25,9 +28,11 @@
                                 <span class="fw-semibold text-dark">
                                     <span class="text-muted small">#{{ $salesRank++ }}</span> {{ $user->name }}
                                 </span>
+                                @can(Permission::DASHBOARD_USER_STATS)
                                 <span class="badge bg-soft-primary text-primary px-2 py-1">
                                     {{ format_amount($user->actual_sales) }} / {{ format_amount($user->current_target->target_amount) }}
                                 </span>
+                                @endcan
                             </div>
                             <div class="progress" style="height: 10px; border-radius: 5px; background-color: #f0f2f5;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
@@ -40,7 +45,7 @@
                             </div>
                             <div class="d-flex justify-content-between mt-1">
                                 <small class="text-muted">{{ $user->progress_percent }}% Completed</small>
-                                <small class="fw-bold text-success">{{ $user->current_target->ends_at->diffForHumans(now(), true) }} left</small>
+                                <!-- <small class="fw-bold text-success">{{ $user->current_target->ends_at->diffForHumans(now(), true) }} left</small> -->
                             </div>
                         </div>
                     @endif

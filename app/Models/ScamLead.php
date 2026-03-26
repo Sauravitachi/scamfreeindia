@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Foundation\Model;
-use App\Services\ScamLeadService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,62 +42,20 @@ class ScamLead extends Model
         'is_duplicate' => 'boolean',
     ];
 
-    /**
-     * The "booted" method is called when the model is booted.
-     */
-    protected static function booted(): void
-    {
-
-        static::creating(function (ScamLead $scamLead) {
-
-            if (ScamLeadService::getInstance()->isBypassedNumber($scamLead->phone_number)) {
-                return false;
-            }
-
-            if ($scamLead->country_code === null) {
-                $scamLead->country_code = 'in';
-            }
-
-            ScamLeadService::getInstance()->sanitizeName($scamLead);
-            ScamLeadService::getInstance()->setDialCodeFromCountryCode($scamLead);
-
-        });
-
-        static::saving(function (ScamLead $scamLead): void {
-
-            if ($scamLead->isDirty('country_code')) {
-                ScamLeadService::getInstance()->setDialCodeFromCountryCode($scamLead);
-            }
-
-        });
-
-        static::saved(function (ScamLead $scamLead): void {
-
-            ScamLeadService::getInstance()->syncIsDuplicateCallback($scamLead, event: 'update');
-            ScamLeadService::getInstance()->syncExistingCustomerCallback($scamLead);
-            ScamLeadService::getInstance()->syncErrorsCallback($scamLead);
-
-        });
-
-        static::deleted(function (ScamLead $scamLead): void {
-            ScamLeadService::getInstance()->syncIsDuplicateCallback($scamLead, event: 'delete');
-        });
-    }
-
-    public static function scopeWherePhoneDetails(Builder $query, string $phoneNumber, string $countryCode): void
+    public static function scopeWherePhoneDetails(Builder $query, string $phoneNumber, ?string $countryCode = 'in'): void
     {
         $query->where('phone_number', $phoneNumber)
-            ->where('country_code', $countryCode ?? 'in')->latest();
+            ->where('country_code', $countryCode ?? 'in')
+            ->latest();
     }
 
     public function getFullPhoneNumberAttribute(): string
     {
-        if (! $this->hasAllAttributes('phone_number', 'dial_code')) {
-            $this->refresh();
-        }
-        $phoneNumber = $this->phone_number;
-        if ($this->dial_code) {
-            $phoneNumber = "+$this->dial_code $phoneNumber";
+        $phoneNumber = (string) $this->phone_number;
+        $dialCode = (string) $this->dial_code;
+
+        if ($dialCode !== '') {
+            return "+$dialCode $phoneNumber";
         }
 
         return $phoneNumber;
@@ -106,16 +63,13 @@ class ScamLead extends Model
 
     public function getNameAttribute(?string $name): ?string
     {
-        if ($name) {
-
-            if (in_array($name, ['{{name}}', '{{full_name}}'])) {
-                return null;
-            }
-
-            return $name;
+        if ($name === null) {
+            return null;
         }
 
-        return null;
+        $invalidPlaceholders = ['{{name}}', '{{full_name}}'];
+        
+        return in_array(strtolower(trim($name)), $invalidPlaceholders) ? null : $name;
     }
 
     public function existingCustomer(): BelongsTo

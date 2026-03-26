@@ -22,5 +22,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \App\Models\ScamRegistration::observe(\App\Observers\ScamRegistrationObserver::class);
+        \App\Models\ScamLead::observe(\App\Observers\ScamLeadObserver::class);
     }
 }
