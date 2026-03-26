@@ -219,6 +219,13 @@ class AdminSidebar extends Sidebar
                 $this->addSubmenu(title: 'Sub Admin', url: route('admin.sub_admin'));
             }
         }
+        {
+            $this->add(name: 'blog', title: 'Blog', icon: 'ti ti-news', url: null);
+
+            if ($this->user->can(Permission::BLOG_LIST->value)) {
+                $this->addSubmenu(title: 'Blog', url: route('admin.blog.index'));
+            }
+        }
 
     }
 }
