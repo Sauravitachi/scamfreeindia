@@ -16,10 +16,10 @@
                         <label class="form-label">Slug (Optional)</label>
                         <input type="text" name="slug" class="form-control" value="{{ $blog->slug ?? '' }}" placeholder="auto-generated-from-title">
                     </div>
-                    <div class="mb-3">
+                    <!-- <div class="mb-3">
                         <label class="form-label">Summary</label>
                         <textarea name="summary" class="form-control" rows="3" placeholder="Brief summary of the post">{{ $blog->summary ?? '' }}</textarea>
-                    </div>
+                    </div> -->
                     <div class="mb-3">
                         <label class="form-label required">Content</label>
                         <textarea name="content" id="blog-content" class="form-control">{{ $blog->content ?? '' }}</textarea>
