@@ -1,4 +1,4 @@
-<form action="{{ $action }}" method="POST" id="blog-form">
+<form action="{{ $action }}" method="POST" id="blog-form" enctype="multipart/form-data">
     @csrf
     @isset($blog)
         @method('PUT')
@@ -85,8 +85,21 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">Image URL</label>
-                        <input type="text" name="featured_image" class="form-control" value="{{ $blog->featured_image ?? '' }}" placeholder="https://example.com/image.jpg">
+                        <label class="form-label">Featured Image</label>
+                        <input type="file" name="featured_image" id="featured_image_input" class="form-control" accept="image/*">
+                        <div class="mt-3 text-center">
+                            @if(isset($blog) && $blog->featured_image)
+                                <img id="image_preview" src="{{ asset($blog->featured_image) }}" 
+                                     alt="Featured Image Preview" 
+                                     class="img-thumbnail" 
+                                     style="max-height: 200px;">
+                            @else
+                                <img id="image_preview" src="" 
+                                     alt="Featured Image Preview" 
+                                     class="img-thumbnail d-none" 
+                                     style="max-height: 200px;">
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,6 +141,18 @@
             $('input[name="slug"]').val(slug);
         });
 
+        // Image preview
+        $('#featured_image_input').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#image_preview').attr('src', e.target.result).removeClass('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
         $('#blog-form').on('submit', function(e) {
             e.preventDefault();
             
@@ -136,11 +161,20 @@
                 $('#blog-content').val(editor.getData());
             }
             
+            let formData = new FormData(this);
+            
             runAjax({
                 url: $(this).attr('action'),
-                method: $(this).attr('method'),
-                data: $(this).serialize(),
+                method: 'POST', 
+                data: formData,
                 handleToast: true,
+                ajaxOptions: {
+                    headers: {
+                        'X-HTTP-Method-Override': $(this).find('input[name="_method"]').val() ?? 'POST'
+                    },
+                    processData: false,
+                    contentType: false
+                },
                 success: function(response) {
                     if (response.redirectTo) {
                         window.location.href = response.redirectTo;

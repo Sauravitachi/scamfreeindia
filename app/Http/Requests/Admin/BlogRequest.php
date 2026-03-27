@@ -33,7 +33,7 @@ class BlogRequest extends FormRequest
             ],
             'summary' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
-            'featured_image' => ['nullable', 'string'], // Assuming URL or file path
+            'featured_image' => ['nullable', 'image', 'max:5024'],
             'status' => ['required', Rule::in(['draft', 'published', 'scheduled'])],
             'published_at' => ['nullable', 'date'],
             'meta_title' => ['nullable', 'string', 'max:250'],

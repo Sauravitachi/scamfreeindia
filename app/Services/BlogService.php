@@ -47,6 +47,10 @@ class BlogService extends Service
         }
         $data['author_id'] = auth()->id();
 
+        if ($request->hasFile('featured_image')) {
+            $data['featured_image'] = '/storage/' . $request->file('featured_image')->store('blogs', 'public');
+        }
+
         return Blog::create($data);
     }
 
@@ -55,6 +59,18 @@ class BlogService extends Service
         $data = $request->validated();
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['title']);
+        }
+
+        if ($request->hasFile('featured_image')) {
+            // Delete old image if it exists
+            if ($blog->featured_image) {
+                // Remove /storage/ prefix for Storage facade
+                $oldPath = str_replace('/storage/', '', $blog->featured_image);
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+            }
+            $data['featured_image'] = '/storage/' . $request->file('featured_image')->store('blogs', 'public');
+        } else {
+            unset($data['featured_image']);
         }
 
         $blog->fill($data);
