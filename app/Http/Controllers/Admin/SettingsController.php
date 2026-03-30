@@ -41,7 +41,7 @@ class SettingsController extends \App\Foundation\Controller
 
         if (is_request_post($request)) {
 
-            if ($request->has('panel_login') && $this->service->updatePanelLoginSetting($request)) {
+            if ($this->service->updateLoginSetting($request)) {
                 return $this->responseService->json(success: true);
             }
 

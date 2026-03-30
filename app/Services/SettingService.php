@@ -31,12 +31,25 @@ class SettingService extends Service
         return Setting::whereIn('key', $keys)->get(['id', 'key', 'value'])->keyBy('key');
     }
 
-    public function updatePanelLoginSetting(Request $request): bool
+    public function updateLoginSetting(Request $request): bool
     {
-        $status = (bool) $request->input('panel_login', true);
-        $this->set('panel_login', $status, 'login');
+        if ($request->has('panel_login')) {
+            $status = (bool) $request->input('panel_login', true);
+            $this->set(SettingConstant::PANEL_LOGIN, $status, 'login');
+            ActivityLogService::getInstance()->changedSetting(($status ? 'Enabled' : 'Disabled') . ' Panel Login');
+        }
 
-        ActivityLogService::getInstance()->changedSetting($status ? 'Enabled Panel Login' : 'Disabled Panel Login');
+        if ($request->has('ip_login')) {
+            $status = (bool) $request->input('ip_login', true);
+            $this->set(SettingConstant::IP_LOGIN, $status, 'login');
+            ActivityLogService::getInstance()->changedSetting(($status ? 'Enabled' : 'Disabled') . ' IP Based Login');
+        }
+
+        if ($request->has('allowed_ips')) {
+            $ips = $request->input('allowed_ips');
+            $this->set(SettingConstant::ALLOWED_IPS, $ips, 'login');
+            ActivityLogService::getInstance()->changedSetting('Updated Allowed IPs for Login');
+        }
 
         return true;
     }
