@@ -28,14 +28,20 @@
                                 </span>
                             </div>
                             <h3 class="mb-1 text-capitalize">{{ str_replace(['_', '-'], ' ', $item->name) }}</h3>
-                            <div class="text-muted small mb-3">Modified {{ $item->updated_at->diffForHumans() }}</div>
+                            <div class="text-muted small mb-3">
+                                @if($item->updated_at)
+                                    Modified {{ $item->updated_at->diffForHumans() }}
+                                @else
+                                    Not configured yet
+                                @endif
+                            </div>
                             
                             <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ route('admin.app-ui-data.edit', ['app_ui_datum' => $item->id]) }}" class="btn btn-primary d-flex align-items-center">
+                                <a href="{{ route('admin.app-ui-data.edit', ['app_ui_datum' => $item->name]) }}" class="btn btn-primary d-flex align-items-center">
                                     <i class="ti ti-adjustments me-1"></i> Manage
                                 </a>
                                 
-                                @if(auth()->user()->can(Permission::APP_UI_DATA_DELETE->value))
+                                @if(auth()->user()->can(Permission::APP_UI_DATA_DELETE->value) && $item->id)
                                     <button class="btn btn-icon btn-outline-danger delete-btn" data-id="{{ $item->id }}" title="Delete">
                                         <i class="ti ti-trash"></i>
                                     </button>

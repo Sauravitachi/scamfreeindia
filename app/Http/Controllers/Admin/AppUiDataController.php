@@ -2,188 +2,162 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Constants\Permission;
 use App\Http\Controllers\Controller;
+use App\Services\FileService;
+use App\Services\AppUiDataService;
 use App\Models\AppUiData;
 use Illuminate\Http\Request;
-use App\Services\ResponseService;
-use App\DTO\Toast;
-use App\Services\AppUiService;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use JsValidator;
 
-class AppUiDataController extends \App\Foundation\Controller
+class AppUiDataController extends Controller
 {
+
+    protected $image_directory;
+
     public function __construct(
-        protected ResponseService $responseService,
-        protected AppUiService $appUiService,
-    ) {}
+        protected AppUiDataService $service
+    ) {
 
-    public static function middleware(): array
-    {
-        return [
-            permit(Permission::APP_UI_DATA_LIST, only: ['index']),
-            permit(Permission::APP_UI_DATA_CREATE, only: ['create', 'store']),
-            permit(Permission::APP_UI_DATA_UPDATE, only: ['edit', 'update']),
-            permit(Permission::APP_UI_DATA_DELETE, only: ['destroy']),
-        ];
+        $this->image_directory = 'files/app_ui_data/{name}';
     }
 
-    public function index()
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request)
     {
-        $data = AppUiData::all();
-        return view('admin.app-ui-data.index', compact('data'));
+        $settings = $this->service->getAllDataSettings();
+        $settingNames = array_column($settings, 'name');
+
+        $savedDataByName = AppUiData::query()
+            ->whereIn('name', $settingNames)
+            ->get()
+            ->keyBy('name');
+
+        $data = collect($settingNames)->map(function (string $name) use ($savedDataByName) {
+            return $savedDataByName->get($name) ?? new AppUiData(['name' => $name]);
+        });
+
+        return view('admin.app_ui_data.index', compact('data'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \\Illuminate\\Http\\Response
+     */
     public function create()
     {
-        return view('admin.app-ui-data.create');
-    }
+        $settings = $this->service->getAllDataSettings();
+        $settingNames = array_column($settings, 'name');
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|unique:app_ui_data,name',
-            'data' => 'nullable|string',
-        ]);
-
-        $data = [];
-        if ($request->filled('data')) {
-            $data = json_decode($request->data, true) ?? [];
+        if (empty($settingNames)) {
+            return redirect()
+                ->route('admin.app-ui-data.index')
+                ->with('error', 'No App UI sections are configured.');
         }
 
-        // Handle Structured Video Section
-        if ($request->has('video_section')) {
-            $videoSection = $request->input('video_section');
-            if (isset($videoSection['cards'])) {
-                foreach ($videoSection['cards'] as $index => &$card) {
-                    // Handle Image Upload
-                    if ($request->hasFile("video_section.cards.$index.image")) {
-                        $card['image_url'] = $this->saveFile($request->file("video_section.cards.$index.image"), 'app_ui_data/video_section/images');
-                    }
-                    unset($card['image']);
+        $existingNames = AppUiData::query()
+            ->whereIn('name', $settingNames)
+            ->pluck('name')
+            ->all();
 
-                    // Handle PDF Upload
-                    if ($request->hasFile("video_section.cards.$index.pdf")) {
-                        $card['pdf_url'] = $this->saveFile($request->file("video_section.cards.$index.pdf"), 'app_ui_data/video_section/pdfs');
-                    }
-                    unset($card['pdf']);
-                }
-            }
-            $data['video_section'] = $videoSection;
-        }
+        $targetName = collect($settingNames)->first(function (string $name) use ($existingNames) {
+            return !in_array($name, $existingNames, true);
+        }) ?? $settingNames[0];
 
-        AppUiData::create([
-            'name' => $validated['name'],
-            'data' => $data,
-        ]);
-
-        // Clear cache for the new data
-        $this->appUiService->clearCache($validated['name']);
-
-        return $this->responseService->json(
-            success: true, 
-            toast: new Toast('success', 'UI Data created successfully!'),
-            redirect: route('admin.app-ui-data.index')
-        );
+        return redirect()->route('admin.app-ui-data.edit', ['app_ui_datum' => $targetName]);
     }
 
-    public function edit(AppUiData $appUiData)
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(string $name)
     {
-        return view('admin.app-ui-data.edit', compact('appUiData'));
-    }
+        $dataSettings = $this->service->getDataSetting($name);
 
-    public function update(Request $request, AppUiData $appUiData)
-    {
-        $validated = $request->validate([
-            'name' => 'required|unique:app_ui_data,name,' . $appUiData->id,
-            'data' => 'nullable|string',
-        ]);
+        abort_if(!$dataSettings, 404);
 
-        $data = [];
-        if ($request->filled('data')) {
-            $data = json_decode($request->data, true) ?? [];
+        $validator = JsValidator::make($dataSettings['validation_rules']);
+
+        $appUiData = $this->service->getDataByName($name);
+
+        if (!$appUiData) {
+            $appUiData = new AppUiData;
+            $appUiData->name = $name;
+            $data = new \stdClass;
         } else {
-            $data = $appUiData->data ?? [];
+            $data = json_decode($appUiData->data);
         }
 
-        // Handle Structured Video Section
-        if ($request->has('video_section')) {
-            $videoSection = $request->input('video_section');
-            $existingVideoSection = $appUiData->data['video_section'] ?? [];
-            
-            if (isset($videoSection['cards'])) {
-                foreach ($videoSection['cards'] as $index => &$card) {
-                    $oldCard = $existingVideoSection['cards'][$index] ?? [];
-                    
-                    // Handle Image Upload
-                    if ($request->hasFile("video_section.cards.$index.image")) {
-                        $this->deleteFile($oldCard['image_url'] ?? null);
-                        $card['image_url'] = $this->saveFile($request->file("video_section.cards.$index.image"), 'app_ui_data/video_section/images');
-                    } else {
-                        $card['image_url'] = $videoSection['cards'][$index]['image_url'] ?? $oldCard['image_url'] ?? null;
-                    }
-                    unset($card['image']);
 
-                    // Handle PDF Upload
-                    if ($request->hasFile("video_section.cards.$index.pdf")) {
-                        $this->deleteFile($oldCard['pdf_url'] ?? null);
-                        $card['pdf_url'] = $this->saveFile($request->file("video_section.cards.$index.pdf"), 'app_ui_data/video_section/pdfs');
-                    } else {
-                        $card['pdf_url'] = $videoSection['cards'][$index]['pdf_url'] ?? $oldCard['pdf_url'] ?? null;
-                    }
-                    unset($card['pdf']);
-                }
-            }
-            $data['video_section'] = $videoSection;
-        }
 
-        $appUiData->name = $validated['name'];
-        $appUiData->data = $data;
+
+        return view("admin/app_ui_data/edit", compact('appUiData', 'data', 'validator'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $name)
+    {
+
+        $dataSettings = $this->service->getDataSetting($name);
+
+        abort_if(!$dataSettings, 404);
+
+        $rules = $dataSettings['validation_rules'];
+
+        $request->validated_data = $request->validate($rules);
+
+        $method = "handle__$name";
+
+        $request->merge([
+            'rules' => $rules
+        ]);
+
+        return $this->$method($request, $name);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+
+    public function handle__video_section(Request $request, string $name)
+    {
+        $data = $request->validated_data;
+
+        $appUiData = $this->service->getDataByName($name) ?? new AppUiData;
+
+        $appUiData->forceFill(['name' => $name, 'data' => json_encode($data)]);
+
         $appUiData->save();
 
-        // Clear cache for the updated data
-        $this->appUiService->clearCache($appUiData->name);
-        if ($appUiData->getOriginal('name') !== $appUiData->name) {
-            $this->appUiService->clearCache($appUiData->getOriginal('name'));
-        }
-
-        return $this->responseService->json(
-            success: true, 
-            toast: new Toast('success', 'UI Data updated successfully!'),
-            redirect: route('admin.app-ui-data.index')
-        );
+        return redirect()->route('admin.app-ui-data.index')->with('success', 'UI Updated!');
     }
 
-    protected function saveFile($file, $directory)
+    private function saveImage(Request $request, string $imageField, string $name)
     {
-        if (!$file) return null;
-        $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        $path = "public/{$directory}";
-        $fullPath = $file->storeAs($path, $fileName);
-        return Storage::url($fullPath);
+        $dir = str_replace('{name}', $name, $this->image_directory);
+        $image = FileService::imageUploader($request, $imageField, $dir);
+        return $image ? FileService::getFileUrl($dir . '/', $image) : imageNotFoundUrl();
     }
 
-    protected function deleteFile($url)
-    {
-        if (empty($url)) return;
-        $path = str_replace(Storage::url(''), 'public', $url);
-        if (Storage::exists($path)) {
-            Storage::delete($path);
-        }
-    }
-
-    public function destroy(AppUiData $appUiData)
-    {
-        $name = $appUiData->name;
-        $appUiData->delete();
-
-        // Clear cache
-        $this->appUiService->clearCache($name);
-
-        return $this->responseService->json(
-            success: true, 
-            toast: new Toast('success', 'UI Data deleted successfully!')
-        );
-    }
+    
 }
