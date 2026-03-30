@@ -227,5 +227,13 @@ class AdminSidebar extends Sidebar
             }
         }
 
+        {
+            $this->add(name: 'ui_data', title: 'UI Data', icon: 'ti ti-layout-sidebar', url: null);
+
+            if ($this->user->can(Permission::APP_UI_DATA_LIST->value)) {
+                $this->addSubmenu(title: 'App UI Data', url: route('admin.app-ui-data.index'));
+            }
+        }
+
     }
 }

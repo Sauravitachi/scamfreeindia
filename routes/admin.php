@@ -156,6 +156,7 @@ $routes = function () {
             Route::get('is-office-timing', 'isOfficeTiming')->name('is-office-timing');
         });
         Route::resource('blog', BlogController::class);
+        Route::resource('app-ui-data', \App\Http\Controllers\Admin\AppUiDataController::class);
         Route::get('sub_admin', [ScamController::class, 'subAdmin'])->name('sub_admin');
     });
 };
