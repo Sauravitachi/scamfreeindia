@@ -33,7 +33,13 @@ class ScamStatusReportController extends Controller
             $causerIdFilter = $request->get('causer_id');
             $scamIdFilter = $request->get('scam_id');
 
-            // 1. Fetch scam status records for the given date
+            // 1. Restriction check: Sales and Drafting Executives only see their own transitions
+            $user = auth()->user();
+            if ($user && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin'])) {
+                $causerIdFilter = $user->id;
+            }
+
+            // 2. Fetch scam status records for the given date
             $query = ScamStatusRecord::with(['scam.customer', 'status', 'causer'])
                 ->whereDate('created_at', $date)
                 ->orderBy('scam_id')

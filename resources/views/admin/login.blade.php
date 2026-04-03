@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
     
-    {{-- <link rel="icon" href="{{ asset('assets/theme/img/favicon.ico') . '?v=' . $assetsVersion }}" type="image/x-icon"> --}}
+    <link rel="icon" href="{{ asset('assets/theme/img/favicon.ico') . '?v=' . $assetsVersion }}" type="image/x-icon">
     <style>
         @import url('https://rsms.me/inter/inter.css');
 
@@ -112,20 +112,18 @@
         <div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block">
             <!-- Photo -->
             <div class="bg-cover h-100 min-vh-100"
-                style="background-image: url({{ asset('static/photos/login-bg.jpeg') }})">
+                style="background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1-1&auto=format&fit=crop&w=1950&q=80')">
             </div>
         </div>
     </div>
     
     <!-- Libs JS -->
-    <!-- Tabler Core -->
-    <script src="{{ asset('assets/theme/js/tabler.min.js') . "?v={$assetsVersion}"  }}" defer></script>
     <script type="text/javascript" src="{{ asset('assets/common/plugins/jquery/jquery.min.js') . "?v={$assetsVersion}"  }}"></script>
     <script type="text/javascript" src="{{ asset('vendor/jsvalidation/js/jsvalidation.js') . "?v={$assetsVersion}"  }}"></script>
     <script type="text/javascript" src="{{ asset('assets/common/plugins/notyf/notyf.min.js') }}"></script>
-    
     <script type="text/javascript" src="{{ asset('assets/common/js/script.js') . "?v={$assetsVersion}"  }}"></script>
     <script type="text/javascript" src="{{ asset('assets/theme/script.js') . "?v={$assetsVersion}" }}"></script>
+    <script src="{{ asset('assets/theme/js/tabler.min.js') . "?v={$assetsVersion}"  }}"></script>
 
     @include('admin.layouts.components.sounds')
 
@@ -136,14 +134,14 @@
 
 
         $(document).ready(function() {
-            var validator = $('#login-form');
-            // Turnstile site key removed
-            $('#login-form').on('submit', function(e) {
+            var $form = $('#login-form');
+            
+            $form.on('submit', function(e) {
                 e.preventDefault();
 
                 FFSound.click(); // enforcing sound
                 const form = $(this);
-                if (validator.valid()) {
+                if ($form.valid()) {
                     let loggedIn = false;
                     $.ajax({
                         type: 'POST',

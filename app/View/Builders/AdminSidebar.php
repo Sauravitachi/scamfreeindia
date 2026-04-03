@@ -224,6 +224,21 @@ class AdminSidebar extends Sidebar
                 $this->addSubmenu(title: 'Sub Admin', url: route('admin.sub_admin'));
             }
         }
+        {
+            $this->add(name: 'blog', title: 'Blog', icon: 'ti ti-news', url: null);
+
+            if ($this->user->can(Permission::BLOG_LIST->value)) {
+                $this->addSubmenu(title: 'Blog', url: route('admin.blog.index'));
+            }
+        }
+
+        {
+            $this->add(name: 'ui_data', title: 'UI Data', icon: 'ti ti-layout-sidebar', url: null);
+
+            if ($this->user->can(Permission::APP_UI_DATA_LIST->value)) {
+                $this->addSubmenu(title: 'App UI Data', url: route('admin.app-ui-data.index'));
+            }
+        }
 
     }
 }

@@ -49,9 +49,18 @@ class ReportController extends \App\Foundation\Controller
         $salesStatuses = \App\Models\ScamStatus::where('type', 'sales')->orderBy('title')->get();
         $draftingStatuses = \App\Models\ScamStatus::where('type', 'drafting')->orderBy('title')->get();
         
-        $users = \App\Models\User::whereHas('roles', function($q) {
-            $q->whereIn('name', ['Admin', 'Super Admin', 'Sales Executive', 'Drafting Executive', 'Manager', 'Sub Admin']);
-        })->orderBy('name')->get();
+        $user = auth()->user();
+        $query = \App\Models\User::query();
+
+        if ($user && $user->hasAnyRole(['Sales Executive', 'Drafting Executive']) && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin'])) {
+            $query->where('id', $user->id);
+        } else {
+            $query->whereHas('roles', function($q) {
+                $q->whereIn('name', ['Admin', 'Super Admin', 'Sales Executive', 'Drafting Executive', 'Manager', 'Sub Admin']);
+            });
+        }
+
+        $users = $query->orderBy('name')->get();
 
         return view('admin.reports.scam-status-transition-report', compact('salesStatuses', 'draftingStatuses', 'users'));
     }

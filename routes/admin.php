@@ -5,6 +5,7 @@ use App\Constants\Permission;
 use App\Enums\ScamStatusType;
 use App\Http\Controllers\Admin\AccountSettingsController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CustomerEnquiryController;
 use App\Http\Controllers\Admin\CustomerEnquiryStatusController;
@@ -155,6 +156,8 @@ $routes = function () {
         Route::prefix('office')->as('office.')->controller(OfficeController::class)->group(function () {
             Route::get('is-office-timing', 'isOfficeTiming')->name('is-office-timing');
         });
+        Route::resource('blog', BlogController::class);
+        Route::resource('app-ui-data', \App\Http\Controllers\Admin\AppUiDataController::class);
         Route::get('sub_admin', [ScamController::class, 'subAdmin'])->name('sub_admin');
     });
 };

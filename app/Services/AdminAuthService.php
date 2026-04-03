@@ -12,15 +12,25 @@ class AdminAuthService extends Service
 {
     public function canLogin(User|AuthUser $admin): LoginPermit
     {
-        // Check 1 : Panel Access Permission
         if ($admin->cannot(Permission::ADMIN_PANEL->value)) {
             return new LoginPermit(canLogin: false, message: 'Account is not authorized to visit the dashboard.');
         }
 
-        // Check 2 : Panel Login Status
         if (! setting(Setting::PANEL_LOGIN, false)) {
             if (! $admin->hasPermissionTo(Permission::BYPASS_DISABLED_LOGIN)) {
                 return new LoginPermit(canLogin: false, message: 'Panel login is disabled right now. Try again later!');
+            }
+        }
+
+        if (setting(Setting::IP_LOGIN, false)) {
+            if (! $admin->hasPermissionTo(Permission::BYPASS_DISABLED_LOGIN)) {
+                $allowedIps = setting(Setting::ALLOWED_IPS, '');
+                $allowedIps = array_filter(array_map('trim', explode(',', $allowedIps)));
+                $currentIp = request()->ip();
+
+                if (! in_array($currentIp, $allowedIps)) {
+                    return new LoginPermit(canLogin: false, message: "IP restricted! Your IP ($currentIp) is not allowed.");
+                }
             }
         }
 

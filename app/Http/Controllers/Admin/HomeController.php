@@ -7,6 +7,7 @@ use App\Services\DashboardService;
 use App\Services\ResponseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\AppUiData;
 use Illuminate\View\View;
 
 class HomeController extends \App\Foundation\Controller
@@ -36,4 +37,15 @@ class HomeController extends \App\Foundation\Controller
 
         return view('admin.home.index', $this->service->viewData());
     }
+
+    public function getVideoSectionData(): JsonResponse
+    {
+        $data = AppUiData::getVideoSectionData();
+        
+        return $this->responseService->json(
+            success: true,
+            data: $data ? $data->getData() : null
+        );
+    }    
+    
 }

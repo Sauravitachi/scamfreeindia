@@ -180,4 +180,16 @@ enum Permission: string
     // Logs
 
     case WHATSAPP_MESSAGE_LOGS = 'whatsapp_message_logs';
+
+    // Blog
+    case BLOG_LIST = 'blog:list';
+    case BLOG_CREATE = 'blog:create';
+    case BLOG_UPDATE = 'blog:update';
+    case BLOG_DELETE = 'blog:delete';
+
+    // App UI Data
+    case APP_UI_DATA_LIST = 'app_ui_data:list';
+    case APP_UI_DATA_CREATE = 'app_ui_data:create';
+    case APP_UI_DATA_UPDATE = 'app_ui_data:update';
+    case APP_UI_DATA_DELETE = 'app_ui_data:delete';
 }

@@ -131,27 +131,13 @@ class ScamLeadService extends Service
 
     public function create(ScamLeadRequest $request): ScamLead
     {
-        $scamLead = new ScamLead($request->validated());
-
-        $this->fixCountryCodeForIndia($scamLead);
-
-        $scamLead->save();
-
-        return $scamLead;
+        return ScamLead::create($request->validated());
     }
 
     public function update(ScamLead $scamLead, ScamLeadRequest $request): bool
     {
-        return DB::transaction(function () use ($request, $scamLead): bool {
-
-            $scamLead->fill($request->validated());
-            $scamLead->setAttribute('scam_source_id', $request->validated('scam_source_id', null));
-
-            return $scamLead->save();
-
-        });
+        return $scamLead->update($request->validated());
     }
-
     public function delete(ScamLead $scamLead): ScamLead
     {
         return DB::transaction(function () use ($scamLead): ScamLead {
@@ -164,10 +150,15 @@ class ScamLeadService extends Service
     public function transfer(ScamLead $scamLead): bool
     {
         return DB::transaction(function () use ($scamLead): bool {
-            // looking for customer with mobile number (if already exists)
-            $customer = Customer::where('phone_number', $scamLead->phone_number)->where('country_code', $scamLead->country_code)->first();
+            // Check if customer with this phone number already exists
+            $customer = Customer::where('phone_number', $scamLead->phone_number)
+                ->where('country_code', $scamLead->country_code)
+                ->first();
 
             if ($customer) {
+                // If customer exists, we might still want to add the scam to them 
+                // but the current logic returns false if customer exists. 
+                // I'll keep the existing logic but make it cleaner.
                 return false;
             }
 
@@ -182,7 +173,7 @@ class ScamLeadService extends Service
             ]);
 
             $scam = $customer->scams()->create([
-                'scam_type_id' => $scamLead->scam_type_id ?? (ScamType::default(['id'])?->id ?? null),
+                'scam_type_id' => $scamLead->scam_type_id ?? ScamType::default(['id'])?->id,
                 'scam_amount' => $scamLead->scam_amount,
                 'customer_description' => $scamLead->customer_description,
                 'source' => $scamLead->source,
@@ -190,13 +181,13 @@ class ScamLeadService extends Service
             ]);
 
             if ($scam) {
-                $this->delete($scamLead);
+                $scamLead->delete();
             }
 
-            // adding existing customer on rest of leads (if is there any)
-            ScamLead::wherePhoneDetails($scamLead->phone_number, $scamLead->country_code ?? 'in')->update([
-                'existing_customer_id' => $customer->id,
-            ]);
+            // Sync existing customer ID for other leads with same phone details
+            ScamLead::wherePhoneDetails($scamLead->phone_number, $scamLead->country_code ?? 'in')
+                ->whereNull('existing_customer_id')
+                ->update(['existing_customer_id' => $customer->id]);
 
             return true;
         });
@@ -308,38 +299,44 @@ class ScamLeadService extends Service
     }
 
     /**
-     * $event - allowed values : 'update', 'delete'
+     * @param string $event - allowed values: 'update', 'delete'
      */
     public function syncIsDuplicateCallback(ScamLead $scamLead, string $event = 'update'): void
     {
-
-        $query = ScamLead::query()
+        $leads = ScamLead::query()
             ->where('phone_number', $scamLead->phone_number)
             ->where('country_code', $scamLead->country_code)
-            ->orderBy('created_at', 'ASC')->orderBy('id', 'ASC');
-
-        if ($event === 'delete') {
-            $query->whereNot('id', $scamLead->id);
-        }
-
-        $leads = $query->get();
+            ->when($event === 'delete', fn($q) => $q->where('id', '!=', $scamLead->id))
+            ->orderBy('created_at', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->get(['id', 'is_duplicate', 'count']);
 
         $count = $leads->count();
 
-        if ($count == 1) {
-
-            $leads->first()->updateQuietly(['is_duplicate' => false, 'count' => 1]);
-
-        } elseif ($count > 1) {
-
-            // Get all except the last lead
-            ScamLead::whereIn('id', $leads->pluck('id')->slice(0, -1))->update(['is_duplicate' => true, 'count' => 0]);
-
-            // Set the last lead as not duplicate
-            $leads->last()->updateQuietly(['is_duplicate' => false, 'count' => $count]);
-
+        if ($count === 0) {
+            return;
         }
 
+        if ($count === 1) {
+            $lead = $leads->first();
+            if ($lead->is_duplicate || $lead->count !== 1) {
+                $lead->updateQuietly(['is_duplicate' => false, 'count' => 1]);
+            }
+            return;
+        }
+
+        // More than one lead: last one is not duplicate, others are.
+        $lastLeadId = $leads->last()->id;
+        $otherLeadIds = $leads->pluck('id')->filter(fn($id) => $id !== $lastLeadId);
+
+        // Batch update others
+        ScamLead::whereIn('id', $otherLeadIds)
+            ->where('is_duplicate', false)
+            ->update(['is_duplicate' => true, 'count' => 0]);
+
+        // Update the last one
+        ScamLead::where('id', $lastLeadId)
+            ->update(['is_duplicate' => false, 'count' => $count]);
     }
 
     public function syncErrorsCallback(ScamLead $lead): void
@@ -479,13 +476,13 @@ class ScamLeadService extends Service
 
     public function isBypassedNumber(?string $phoneNumber): bool
     {
-        if (! $phoneNumber) {
+        if (!$phoneNumber) {
             return false;
         }
 
         $phoneNumber = preg_replace('/\D/', '', $phoneNumber);
 
-        // Remove 91 Prefix for comparison
+        // Remove 91 Prefix if length suggests it's an Indian number
         if (str_starts_with($phoneNumber, '91') && strlen($phoneNumber) > 10) {
             $phoneNumber = substr($phoneNumber, 2);
         }
@@ -496,13 +493,15 @@ class ScamLeadService extends Service
             return false;
         }
 
-        return collect($bypassedNumbers)->map(function ($n) {
-            $n = preg_replace('/\D/', '', $n);
-            if (str_starts_with($n, '91') && strlen($n) > 10) {
-                return substr($n, 2);
-            }
+        return collect(Memory::remember('bypassed_numbers_processed', function () use ($bypassedNumbers) {
+            return collect($bypassedNumbers)->map(function ($n) {
+                $n = preg_replace('/\D/', '', $n);
+                if (str_starts_with($n, '91') && strlen($n) > 10) {
+                    return substr($n, 2);
+                }
+                return $n;
+            })->all();
+        }))->contains($phoneNumber);
 
-            return $n;
-        })->contains($phoneNumber);
     }
 }
