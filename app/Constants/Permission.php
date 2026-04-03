@@ -136,6 +136,7 @@ enum Permission: string
 
     // Report
     case REPORT_USER_SCAM_STATUS = 'report:user_scam_status';
+    case REPORT_SCAM_STATUS_TRANSITION = 'report:scam_status_transition';
 
     // User Related Permissions
     case VIEW_ALL_USERS_ACTIVITIES = 'view_all_users_activities';

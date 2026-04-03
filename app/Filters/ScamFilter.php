@@ -70,11 +70,11 @@ class ScamFilter
             }
         }
 
-        if (! $showStatusUnassigneRecords) {
-            $query->whereDoesntHave('latestSalesStatusUnassignRecord')
-                ->whereDoesntHave('latestDraftingStatusUnassignRecord')
-                ->whereDoesntHave('latestServiceStatusUnassignRecord');
-        }
+        // if (! $showStatusUnassigneRecords) {
+        //     $query->whereDoesntHave('latestSalesStatusUnassignRecord')
+        //         ->whereDoesntHave('latestDraftingStatusUnassignRecord')
+        //         ->whereDoesntHave('latestServiceStatusUnassignRecord');
+        // }
 
         /**
          * Customer Name Filter

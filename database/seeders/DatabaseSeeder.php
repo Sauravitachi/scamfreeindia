@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             ScamTypesSeeder::class,
+            ReportPermissionSeeder::class,
         ]);
     }
 }
