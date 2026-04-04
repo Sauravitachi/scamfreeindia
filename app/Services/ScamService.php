@@ -501,14 +501,66 @@ class ScamService extends Service
     public function handleScamStatusUpdatedEvent(Scam $scam, bool $save = false): void
     {
         $authId = Auth::id();
+        if ($scam->isDirty('sales_status_id') || $scam->isDirty('remark') || $scam->isDirty('scam_amount')) {
+                    if ($scam->sales_status_id == 7) {
+                        $scamAmount = $scam->scam_amount;
+                        $remark = strtolower($scam->remark ?? '');
+                        
+                        $remarkMatches = Str::contains($remark, [
+                            'less than 10000', 'less than 10k',
+                            'less then 10000', 'less then 10k',
+                            'less the 10000', 'less the 10k',
+                            'amount 10000', 'amount 10k',
+                            'amount 10 thousand', 'less than 10 thousand',
+                            'less then 10 thousand', 'less the 10 thousand',
+                            'under 10k', 'below 10k', 'under 10000', 'below 10000',
+                            ' 1k', ' 2k', ' 3k', ' 4k', ' 5k', ' 6k', ' 7k', ' 8k', ' 9k',
+                            'amount 1k', 'amount 2k', 'amount 3k', 'amount 4k', 'amount 5k', 'amount 6k', 'amount 7k', 'amount 8k', 'amount 9k'
+                        ]) || preg_match('/\b[1-9]k\b/i', $remark);
 
+                        // Also check for plain numbers less than 10000 in the remark.
+                        if (!$remarkMatches && preg_match_all('/\b\d{1,3}(?:,?\d{3})*\b/', $remark, $numberMatches)) {
+                            foreach ($numberMatches[0] as $numStr) {
+                                $num = (float) str_replace(',', '', $numStr);
+                                if ($num > 0 && $num < 10000) {
+                                    $remarkMatches = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Only move to User 20 if we are SURE it's a small scam (explicit amount < 10k or matching keywords).
+                        // If amount is null/zero and remark is empty/not specifying small amount, keep it in the general pool (NULL).
+                        $isSmall = (!is_null($scamAmount) && (float)$scamAmount > 0 && (float)$scamAmount < 10000) || $remarkMatches;
+
+                        if ($isSmall) {
+                            if ($scam->sales_assignee_id != 20) {
+                                $scam->sales_assignee_id = 20;
+                                $scam->sales_assigned_at = now();
+                                $scam->logActivity(
+                                    "Automatically assigned to Sales User ID 20 due to 'Not Interested' status with amount < 10,000 or matching remark",
+                                    ScamActivityEvent::SALES_ASSIGN
+                                );
+
+                                Log::info('Automated assignment triggered for Not Interested status', [
+                                    'scam_id' => $scam->id,
+                                    'scam_amount' => $scam->scam_amount,
+                                    'remark' => $scam->remark,
+                                ]);
+                            }
+                        }
+                    }
+                }
         if ($scam->isDirty('sales_status_id')) {
 
             $scam->sales_status_record_id = ScamStatusRecord::logRecord(scam: $scam, type: ScamStatusType::SALES, causer: $authId)?->id;
 
             UserScamStatusFreeze::checkAndTryFreezeRelease(scam: $scam, statusId: $scam->getOriginal('sales_status_id'), scamStatusType: ScamStatusType::SALES);
 
-            $this->unassignCaseOnStatusChange($scam, ScamStatusType::SALES);
+            // Only skip unassignment if we JUST automatically assigned it to User 20 in this event
+            if (!($scam->isDirty('sales_assignee_id') && $scam->sales_assignee_id == 20)) {
+                $this->unassignCaseOnStatusChange($scam, ScamStatusType::SALES);
+            }
         }
 
         if ($scam->isDirty('drafting_status_id')) {
