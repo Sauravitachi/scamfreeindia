@@ -35,7 +35,7 @@ class ScamStatusReportController extends Controller
 
             // 1. Restriction check: Sales and Drafting Executives only see their own transitions
             $user = auth()->user();
-            if ($user && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin'])) {
+            if ($user && !$user->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin', 'Product Head', 'MIS', 'Auditor', 'Tech Team'])) {
                 $causerIdFilter = $user->id;
             }
 
@@ -43,7 +43,8 @@ class ScamStatusReportController extends Controller
             $query = ScamStatusRecord::with(['scam.customer', 'status', 'causer'])
                 ->whereDate('created_at', $date)
                 ->orderBy('scam_id')
-                ->orderBy('created_at');
+                ->orderBy('created_at')
+                ->orderBy('id');
 
             if ($statusTypeFilter) {
                 $query->where('status_type', $statusTypeFilter);
@@ -104,13 +105,14 @@ class ScamStatusReportController extends Controller
             $totalChanges = 0;
 
             foreach ($groupedByScamAndType as $key => $typeRecords) {
-                // Initial previous status (from history or null if brand new)
-                $previousStatus = isset($lastBeforeToday[$key]) ? $lastBeforeToday[$key]->status?->title : null;
+                $previousStatus = isset($lastBeforeToday[$key]) 
+                    ? ($lastBeforeToday[$key]->status?->title ?: 'No Status') 
+                    : 'No Status';
 
                 foreach ($typeRecords as $record) {
-                    $currentStatus = $record->status?->title ?? 'Unknown';
+                    $currentStatus = $record->status?->title ?: 'No Status';
 
-                    if ($previousStatus !== null && $previousStatus !== $currentStatus) {
+                    if ($previousStatus !== $currentStatus) {
                         
                         $transition = "{$previousStatus} -> {$currentStatus}";
 

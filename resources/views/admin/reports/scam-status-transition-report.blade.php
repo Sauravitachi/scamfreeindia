@@ -28,7 +28,7 @@
                         <x-admin.select name='drafting_status' label='Drafting Status' class="select2" :options="$draftingStatuses->pluck('title', 'title')->toArray()" placeholder="All Drafting" />
                     </div>
                     <div class="col-md-3 col-12">
-                        @if (auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin']))
+                        @if (auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin', 'Product Head', 'MIS', 'Auditor', 'Tech Team']))
                             <x-admin.select name='causer_id' label='User/Agent' class="select2" :options="$users->pluck('name', 'id')->toArray()" placeholder="All Users" />
                         @else
                             <input type="hidden" name="causer_id" value="{{ auth()->id() }}">
