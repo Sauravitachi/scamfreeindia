@@ -39,6 +39,9 @@
                             <div class="col-form-label">Allowed IPs (Comma separated)</div>
                             <div>
                                 <textarea name="allowed_ips" id="allowedIps" class="form-control" rows="3" placeholder="e.g. 192.168.1.1, 127.0.0.1">{{ $settings->get('allowed_ips')?->value }}</textarea>
+                                <div class="mt-2 text-muted-sm">
+                                    Your current IP: <code id="currentIp" role="button" title="Click to copy">{{ request()->ip() }}</code>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -130,6 +133,12 @@
                         complete: () => overlayLoader.hide(),
                     });
                 })
+
+                $('#currentIp').on('click', function() {
+                    const ip = $(this).text();
+                    navigator.clipboard.writeText(ip);
+                    toastr.success('IP Copied to clipboard!');
+                });
             }
 
             // calling handlers

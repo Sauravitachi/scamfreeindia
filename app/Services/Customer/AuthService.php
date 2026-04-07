@@ -12,16 +12,6 @@ class AuthService extends Service
 {
     public function sendOtp(SendOtpRequest $request)
     {
-        if (setting(Setting::IP_LOGIN, false)) {
-            $allowedIps = setting(Setting::ALLOWED_IPS, '');
-            $allowedIps = array_filter(array_map('trim', explode(',', $allowedIps)));
-            $currentIp = $request->ip();
-
-            if (! in_array($currentIp, $allowedIps)) {
-                abort(403, "IP Restricted! Your IP ($currentIp) is not allowed to request OTP.");
-            }
-        }
-
         $customer = Customer::wherePhoneDetails($request->phone_number, 'in')->first(['id']);
         $userAgent = $request->userAgent();
         $ipAddress = $request->ip();

@@ -105,7 +105,7 @@ class AuthController extends \App\Foundation\Controller
         $message = 'The provided credentials do not match our records.';
 
         return $this->responseService->errors([
-            'username' => [$message],
+            'identifier' => [$message],
             'password' => [$message],
         ]);
     }
