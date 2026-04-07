@@ -181,6 +181,12 @@ enum Permission: string
 
     case WHATSAPP_MESSAGE_LOGS = 'whatsapp_message_logs';
 
+    // State
+    case STATE_LIST = 'state:list';
+    case STATE_CREATE = 'state:create';
+    case STATE_UPDATE = 'state:update';
+    case STATE_DELETE = 'state:delete';
+
     // Blog
     case BLOG_LIST = 'blog:list';
     case BLOG_CREATE = 'blog:create';

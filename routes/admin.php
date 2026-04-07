@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ScamController;
 use App\Http\Controllers\Admin\ScamLeadController;
 use App\Http\Controllers\Admin\ScamRegistrationAmountController;
 use App\Http\Controllers\Admin\ScamSourceController;
+use App\Http\Controllers\Admin\StateController;
 use App\Http\Controllers\Admin\ScamStatusController;
 use App\Http\Controllers\Admin\ScamTypeController;
 use App\Http\Controllers\Admin\ServerController;
@@ -74,12 +75,14 @@ $routes = function () {
         });
         Route::resource('customers', CustomerController::class);
         Route::prefix('scams')->as('scams.')->controller(ScamController::class)->group(function () {
+            Route::get('select-search', 'selectSearch')->name('select-search');
             Route::post('{scam}/assign-user', 'assignUser')->name('assign-user');
+            Route::post('{scam}/change-state', 'changeState')->name('change-state');
             Route::get('{scam}/all-escalations', 'allScamEscalations')->name('all-scam-escalations');
             Route::post('{scam}/change-status', 'changeStatus')->name('change-status');
-            Route::post('{scam}/upload-scam-files', 'uploadScamFiles')->name('upload-scam-files');
             Route::post('{scam}/change-scam-status-review', 'changeScamStatusReview')->name('change-scam-status-review');
-            Route::get('select-search', 'selectSearch')->name('select-search');
+            Route::post('{scam}/upload-scam-files', 'uploadScamFiles')->name('upload-scam-files');
+
             Route::post('bulk-assign-users', 'bulkAssignUsers')->name('bulk-assign-users');
             Route::post('process-import-file', 'processImportFile')->name('process-import-file');
             Route::post('scam/import', 'import')->name('import');
@@ -144,6 +147,10 @@ $routes = function () {
             Route::get('select-search', 'selectSearch')->name('select-search');
         });
         Route::resource('scam-sources', ScamSourceController::class);
+        Route::prefix('states')->as('states.')->controller(StateController::class)->group(function () {
+            Route::get('select-search', 'selectSearch')->name('select-search');
+        });
+        Route::resource('states', StateController::class);
         Route::post('upload-file', [FileUploadController::class, 'store'])->name('upload-file');
         Route::prefix('server')->name('server.')->controller(ServerController::class)->group(function () {
             Route::get('phpinfo', 'phpinfo')->name('phpinfo');

@@ -80,6 +80,8 @@ class ScamService extends Service
         $table->addColumn('registered_amount', fn (Scam $scam) => $scam->registered_amount);
         $table->addColumn('formatted_registered_amount', fn (Scam $scam) => $scam->formatted_registered_amount);
 
+        $table->addColumn('state', fn (Scam $scam) => $scam->customer?->state);
+
         return $table;
     }
 
@@ -101,7 +103,7 @@ class ScamService extends Service
         ]);
 
         $query->with([
-            'customer:id,first_name,last_name,dial_code,phone_number,email',
+            'customer:id,first_name,last_name,dial_code,phone_number,email,state',
         ]);
 
         if ($recordsType === 3 && $user->can(Permission::STATUS_UNASSIGNED_SCAM_LIST)) {

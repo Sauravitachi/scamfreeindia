@@ -66,6 +66,7 @@ Bc::resource(name: 'notifications', pluralTitle: 'Notifications', singularTitle:
 Bc::resource(name: 'user-activities', pluralTitle: 'User Activities', singularTitle: 'User Activity');
 Bc::resource(name: 'blog', pluralTitle: 'Blogs', singularTitle: 'Blog');
 Bc::resource(name: 'app-ui-data', pluralTitle: 'App UI Datas', singularTitle: 'App UI Data');
+Bc::resource(name: 'states', pluralTitle: 'States', singularTitle: 'State');
 Bc::resource('whatsapp-message-logs', pluralTitle: 'Whatsapp Message Logs', singularTitle: 'Whatsapp Message Log');
 
 Bc::for('admin.reports.user-case-report', function (BreadcrumbTrail $trail): void {

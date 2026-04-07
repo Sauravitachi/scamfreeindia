@@ -209,7 +209,8 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        @php($options = $scamStatuses->where('type', 'sales')->where('unassign_scam', true)->pluck('title', 'id')->toArray())
+                        @php($options = $scamStatuses->where('type', 'sales')->where('unassign_scam', true)->pluck('title', 'id'))
+                        @php($options = $options->prepend('Without Status 🔴', -1)->toArray())
                         <x-admin.select name='sales_status_unassigned_status_id' label='Sales Unassign Status' class="filter-select2" :options="$options" :selected="request()->input('filter_sales_status_unassigned_status_id')" multiple />
                     <div class="d-flex gap-3">
                             <x-admin.checkbox name='exclude_sales_status_unassigned_status_id' label='Exclude' />
@@ -234,7 +235,8 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        @php($options = $scamStatuses->where('type', 'drafting')->where('unassign_scam', true)->pluck('title', 'id')->toArray())
+                        @php($options = $scamStatuses->where('type', 'drafting')->where('unassign_scam', true)->pluck('title', 'id'))
+                        @php($options = $options->prepend('Without Status 🔴', -1)->toArray())
                         <x-admin.select name='drafting_status_unassigned_status_id' label='Drafting Unassign Status' class="filter-select2" :options="$options" :selected="request()->input('filter_drafting_status_unassigned_status_id')" multiple />
                         <x-admin.checkbox name='exclude_drafting_status_unassigned_status_id' label='Exclude' />
                     </div>

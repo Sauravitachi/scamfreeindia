@@ -19,13 +19,15 @@
             <form id="scam-status-report-form">
                 <div class="row">
                     <div class="col-md-3 col-12">
-                        <x-admin.input class="datepicker" name='date' label='Date' placeholder='Select Date' value="{{ now()->toDateString() }}" />
+                        <x-admin.input class="date_range_picker" name='date' label='Date Range' placeholder='Select Date Range' value="{{ now()->toDateString() . ' to ' . now()->toDateString() }}" />
                     </div>
                     <div class="col-md-3 col-12">
-                        <x-admin.select name='sales_status' label='Sales Status' class="select2" :options="$salesStatuses->pluck('title', 'title')->toArray()" placeholder="All Sales" />
+                        @php($salesOptions = $salesStatuses->pluck('title', 'title')->prepend('Without Status 🔴', 'Without Status')->toArray())
+                        <x-admin.select name='sales_status' label='Sales Status' class="select2" :options="$salesOptions" placeholder="All Sales" :selected="request()->input('sales_status')"/>
                     </div>
                     <div class="col-md-3 col-12">
-                        <x-admin.select name='drafting_status' label='Drafting Status' class="select2" :options="$draftingStatuses->pluck('title', 'title')->toArray()" placeholder="All Drafting" />
+                        @php($draftingOptions = $draftingStatuses->pluck('title', 'title')->prepend('Without Status 🔴', 'Without Status')->toArray())
+                        <x-admin.select name='drafting_status' label='Drafting Status' class="select2" :options="$draftingOptions" placeholder="All Drafting" :selected="request()->input('drafting_status')"/>
                     </div>
                     <div class="col-md-3 col-12">
                         @if (auth()->user()->hasAnyRole(['Admin', 'Super Admin', 'Manager', 'Sub Admin', 'Product Head', 'MIS', 'Auditor', 'Tech Team']))

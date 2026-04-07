@@ -117,6 +117,7 @@ class AdminSidebar extends Sidebar
                 Permission::SCAM_TYPE_LIST->value,
                 Permission::SCAM_STATUS_LIST->value,
                 Permission::SCAM_SOURCE_LIST->value,
+                Permission::STATE_LIST->value,
                 Permission::CUSTOMER_ENQUIRY_STATUS_LIST->value,
                 Permission::SCAM_REGISTRATION_AMOUNT_LIST->value,
             ])
@@ -137,6 +138,9 @@ class AdminSidebar extends Sidebar
 
             if ($this->user->can(Permission::SCAM_SOURCE_LIST->value)) {
                 $this->addSubmenu(title: 'Scam Source', url: route('admin.scam-sources.index'));
+            }
+            if ($this->user->can(Permission::STATE_LIST->value)) {
+                $this->addSubmenu(title: 'State', url: route('admin.states.index'));
             }
 
             if ($this->user->can(Permission::SCAM_REGISTRATION_AMOUNT_LIST->value)) {

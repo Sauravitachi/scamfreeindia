@@ -428,11 +428,13 @@ class ScamFilter
             $relation = 'latest'.ucfirst($statusType->value).'StatusUnassignRecord';
 
             $query->whereHas($relation, function (Builder $q) use ($keyData, $statusType, $reverse) {
-                $q->when(
-                    value: $reverse,
-                    callback: fn (Builder $q) => $q->whereNotIn('status_id', $keyData),
-                    default: fn (Builder $q) => $q->whereIn('status_id', $keyData)
-                )->where('status_type', $statusType);
+                $q->where(function ($q) use ($keyData, $reverse) {
+                    if (in_array('-1', $keyData)) {
+                        $q->{$reverse ? 'whereNotNull' : 'whereNull'}('status_id');
+                    } else {
+                        $q->{$reverse ? 'whereNotIn' : 'whereIn'}('status_id', $keyData);
+                    }
+                })->where('status_type', $statusType);
             });
         }
     }
