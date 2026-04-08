@@ -24,3 +24,4 @@ Route::post('/whatsapp/lead', [WhatsAppLeadController::class, 'store']);
 Route::post('/scam/lead', [ScamLeadController::class, 'store']);
 Route::post('/contact', [ContactController::class, 'store']);
 Route::get('/video-section', [HomeController::class, 'getVideoSectionData']);
+Route::get('/expert-section', [HomeController::class, 'getExpertSectionData']);

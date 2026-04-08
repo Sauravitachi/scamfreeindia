@@ -47,5 +47,15 @@ class HomeController extends \App\Foundation\Controller
             data: $data ? $data->getData() : null
         );
     }    
+
+    public function getExpertSectionData(): JsonResponse
+    {
+        $data = AppUiData::getExpertSectionData();
+        
+        return $this->responseService->json(
+            success: true,
+            data: $data ? $data->getData() : null
+        );
+    }    
     
 }
