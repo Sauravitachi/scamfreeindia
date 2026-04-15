@@ -323,10 +323,10 @@ class ScamService extends Service
 
                 if ($type === 'sub_admin' && $assigneeId) {
 
-                    $scam->fill([
-                        'sales_assignee_id' => null,
-                        'sales_status_id' => null,
-                    ]);
+                    // $scam->fill([
+                    //     'sales_assignee_id' => null,
+                    //     'sales_status_id' => null,
+                    // ]);
                 }
 
                 if ($scam->isDirty($column) || ($type === 'sub_admin' && $assigneeId && ($scam->isDirty('sales_assignee_id') || $scam->isDirty('sales_status_id')))) {

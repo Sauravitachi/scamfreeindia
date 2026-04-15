@@ -49,7 +49,7 @@
         'offcanvas-class' => 'offcanvas-full'
     ],
     'buttons' => [
-        $pms->scam_random_assigner
+        $pms->any_full_management
             ? [
                 'label' => 'Random Assign',
                 'icon' => 'ti ti-arrows-random',

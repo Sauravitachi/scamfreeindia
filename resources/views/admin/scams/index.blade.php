@@ -52,7 +52,7 @@
         'offcanvas-class' => 'offcanvas-full'
     ],
     'buttons' => [
-        $pms->scam_random_assigner
+        $pms->scam_excel_import
             ? [
                 'label' => 'Random Assign',
                 'icon' => 'ti ti-arrows-random',
