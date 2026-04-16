@@ -20,6 +20,11 @@
                     <x-admin.input type='number' name='customer_mobile_number' label='Customer Mobile No.' placeholder='Enter customer mobile no.' />
                     <x-admin.checkbox name='exclude_customer_mobile_number' label='Exclude' />
                 </div>
+                <div class="col-12 mt-2">
+                    @php($options = $states->pluck('name', 'id')->toArray())
+                    <x-admin.select name='state_id' label='State' class="filter-select2" :options="$options" :selected="request()->input('filter_state_id')" multiple />
+                    <x-admin.checkbox name='exclude_state_id' label='Exclude' />
+                </div>
             </div>
         </div>
     </div>

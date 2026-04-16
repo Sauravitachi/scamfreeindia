@@ -7,6 +7,7 @@ use App\Enums\ScamAssigneeType;
 use App\Enums\ScamStatusType;
 use App\Models\ScamSource;
 use App\Models\ScamStatus;
+use App\Models\State;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -40,6 +41,10 @@ class ScamFilter
 
         if (($subAdminId = $request->integer('sub_admin_id')) && ($subAdminId == -1 || User::whereSubAdmin()->where('id', $subAdminId)->exists())) {
             $request->merge(['filter_sub_admin_id' => $subAdminId]);
+        }
+
+        if ($stateIds = $request->input('state_id')) {
+            $request->merge(['filter_state_id' => $stateIds]);
         }
     }
 
@@ -143,6 +148,19 @@ class ScamFilter
         }
 
         /**
+         * State Filter
+         */
+        if ($keyData = $request->input('state_id')) {
+            $reverse = $request->boolean('exclude_state_id');
+            if (! is_array($keyData)) {
+                $keyData = [$keyData];
+            }
+            $query->whereHas('customer', function (Builder $q) use ($keyData, $reverse) {
+                $q->{$reverse ? 'whereNotIn' : 'whereIn'}('state', $keyData);
+            });
+        }
+
+        /**
          * Sales Assignee Filter
          */
         if ($request->filled('sales_assignee_id')) {
@@ -197,6 +215,7 @@ class ScamFilter
         if ($request->filled('created_at')) {
             self::dateRangeFilter(query: $query, request: $request, field: 'created_at');
         }
+        
 
         if ($request->filled('sales_status_unassigned_assignee_id')) {
             self::statusUnassignedAssigneeFilter(query: $query, request: $request, field: 'sales_status_unassigned_assignee_id', assigneeType: ScamAssigneeType::SALES);

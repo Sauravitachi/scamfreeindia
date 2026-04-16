@@ -21,4 +21,9 @@ class State extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function scams()
+    {
+        return $this->hasMany(Scam::class);
+    }
 }
