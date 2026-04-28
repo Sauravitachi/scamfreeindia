@@ -262,7 +262,7 @@
                     $('#backButton').hide();
                 }
             });
-        });
+        });                     
     </script>
 
     <script>

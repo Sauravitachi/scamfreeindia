@@ -17,7 +17,7 @@
                                         @if ($activity->user)
                                             by
                                             <span class="text-primary">
-                                                {{ $activity->user->name_with_username }}
+                                                {{ $activity->user->name_with_username }} (ID:{{ $activity->user->id }})
                                             </span>
                                         @endif
                                     </div>

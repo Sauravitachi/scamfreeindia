@@ -2,9 +2,13 @@
 
 @php
     $statusRecords = $scam->statusRecords->where('status_type', $statusType);
+    $assigneeRecords = $scam->assigneeRecords->where('assignee_type', $statusType->value);
     if($causer) {
         $statusRecords = $statusRecords->where('causer_id', $causer->id);
+        $assigneeRecords = $assigneeRecords->where('causer_id', $causer->id);
     }
+
+    $records = $statusRecords->concat($assigneeRecords)->sortBy('created_at');
 @endphp
 
 <div class="card mb-3">
@@ -13,32 +17,40 @@
             Case {{ ucfirst($statusType->value) }} Status Lifecycle
         </div>
         <div class="h3 t-3">
-            @if ($statusRecords->isNotEmpty())
+            @if ($records->isNotEmpty())
                 <div class="timeline_container">
                     <ul class="timeline_ul">
-                        @foreach ($statusRecords as $statusRecord)
+                        @foreach ($records as $record)
                             <li class="timeline_li">
-                                @if ($at = $statusRecord->created_at)
+                                @if ($at = $record->created_at)
                                     <div class="timeline_time">
                                         {{ format_date($at) }}
-                                        @if ($statusRecord->causer)
+                                        @if ($record->causer)
                                             by
                                             <span class="text-primary">
-                                                {{ $statusRecord->causer->name_with_username }}
+                                                {{ $record->causer->name_with_username }} (ID:{{ $record->causer->id }})
                                             </span>
                                         @endif
                                     </div>
                                 @endif
                                 <p class="timeline_p">
-                                    @if ($statusRecord->status)
-                                        <span class="text-muted">Updated status to :</span> {{ $statusRecord->status->title }}
+                                    @if ($record instanceof \App\Models\ScamStatusRecord)
+                                        @if ($record->status)
+                                            <span class="text-muted">Updated status to :</span> {{ $record->status->title }}
+                                        @else
+                                            Removed status
+                                        @endif
                                     @else
-                                        Removed status
+                                        @if ($record->assignee)
+                                            <span class="text-muted">Assigned to :</span> {{ $record->assignee->name_with_username }} (ID:{{ $record->assignee->id }})
+                                        @else
+                                            <span class="text-muted">Unassigned</span>
+                                        @endif
                                     @endif
                                 </p>
-                                @if ($statusRecord->status_remark)
+                                @if ($record instanceof \App\Models\ScamStatusRecord && $record->status_remark)
                                     <p class="text-muted fw-normal">
-                                    <span class="text-dark">Remark: </span> {{ $statusRecord->status_remark }}
+                                    <span class="text-dark">Remark: </span> {{ $record->status_remark }}
                                     </p>
                                 @endif
                             </li>
