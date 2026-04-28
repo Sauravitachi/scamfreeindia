@@ -51,6 +51,7 @@ $routes = function () {
         PermissionMiddleware::using(Permission::ADMIN_PANEL->value),
     ])->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
+        Route::get('chat', [HomeController::class, 'chat'])->name('chat');
         Route::resource('permissions', PermissionController::class)->except('create', 'store', 'destroy');
         Route::resource('roles', RoleController::class);
         Route::prefix('users')->as('users.')->controller(UserController::class)->group(function () {

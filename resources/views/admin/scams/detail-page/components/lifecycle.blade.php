@@ -35,6 +35,21 @@
                     No Activity!
                 </span>
             @endif
-        </div>
+    </div>
+</div>
+
+<!-- Real-Time Chat Component for this specific Case -->
+<div class="card mb-3">
+    <div class="card-body p-0">
+        @php
+            // Create a specific chat room for this Scam case if it doesn't exist
+            $chatName = 'Discussion: Case #' . $scam->id;
+            $conversation = \App\Models\Conversation::firstOrCreate(
+                ['name' => $chatName],
+                ['is_group' => true]
+            );
+        @endphp
+        
+        <livewire:chat-window :conversation="$conversation" />
     </div>
 </div>

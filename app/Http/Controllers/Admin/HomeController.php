@@ -38,6 +38,16 @@ class HomeController extends \App\Foundation\Controller
 
         return view('admin.home.index', $this->service->viewData());
     }
+    public function chat(Request $request): View
+        {
+            $conversation = \App\Models\Conversation::firstOrCreate([
+                'name' => 'General Chat',
+                'is_group' => true,
+            ]);
+
+            return view('admin.home.chat', compact('conversation'));
+        }
+
 
     public function getVideoSectionData(): JsonResponse
     {

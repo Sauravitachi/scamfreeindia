@@ -111,9 +111,9 @@
         </div>
         <div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block">
             <!-- Photo -->
-            <div class="bg-cover h-100 min-vh-100"
-                style="background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1-1&auto=format&fit=crop&w=1950&q=80')">
-            </div>
+            <div class="bg-cover h-50 min-vh-100">
+                <img src="{{ asset('assets/theme/img/image.jpeg') . '?v=' . $assetsVersion }}" alt="">
+            
         </div>
     </div>
     

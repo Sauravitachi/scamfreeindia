@@ -13,6 +13,7 @@ class AdminSidebar extends Sidebar
 
         // Dashboard
         $this->add('dashboard', 'Dashboard', 'ti ti-home', route('admin.home'));
+        $this->add('chat', 'Chat Window', 'ti ti-message', route('admin.chat'));
 
         // User Management
         if (
@@ -105,8 +106,7 @@ class AdminSidebar extends Sidebar
             if ($this->user->hasPermissionTo(Permission::REPORT_USER_SCAM_STATUS)) {
                 $this->addSubmenu(title: 'User Case Report', url: route('admin.reports.user-case-report'));
             }
-
-            if ($this->user->hasPermissionTo(Permission::REPORT_SCAM_STATUS_TRANSITION)) {
+             if ($this->user->hasPermissionTo(Permission::REPORT_SCAM_STATUS_TRANSITION)) {
                 $this->addSubmenu(title: 'Scam Status Transition Report', url: route('admin.reports.scam-status-transition-report'));
             }
         }
@@ -117,7 +117,6 @@ class AdminSidebar extends Sidebar
                 Permission::SCAM_TYPE_LIST->value,
                 Permission::SCAM_STATUS_LIST->value,
                 Permission::SCAM_SOURCE_LIST->value,
-                Permission::STATE_LIST->value,
                 Permission::CUSTOMER_ENQUIRY_STATUS_LIST->value,
                 Permission::SCAM_REGISTRATION_AMOUNT_LIST->value,
             ])
@@ -138,9 +137,6 @@ class AdminSidebar extends Sidebar
 
             if ($this->user->can(Permission::SCAM_SOURCE_LIST->value)) {
                 $this->addSubmenu(title: 'Scam Source', url: route('admin.scam-sources.index'));
-            }
-            if ($this->user->can(Permission::STATE_LIST->value)) {
-                $this->addSubmenu(title: 'State', url: route('admin.states.index'));
             }
 
             if ($this->user->can(Permission::SCAM_REGISTRATION_AMOUNT_LIST->value)) {
@@ -184,7 +180,7 @@ class AdminSidebar extends Sidebar
             if ($this->user->can(Permission::USER_PREFERENCES->value)) {
                 $this->addSubmenu(title: 'User Preferences', url: route('admin.preferences.index'));
             }
-
+           
             if ($this->user->can(Permission::LOGIN_SETTINGS->value)) {
                 $this->addSubmenu(title: 'Login Settings', url: route('admin.settings.login'));
             }

@@ -45,4 +45,14 @@ class PreferenceController extends \App\Foundation\Controller implements HasMidd
 
         return redirect()->back()->with('toast', new Toast(type: 'success', message: 'Preferences Saved!'));
     }
+
+    public function chat(Request $request): View
+    {
+        $conversation = \App\Models\Conversation::firstOrCreate([
+            'name' => 'General Chat',
+            'is_group' => true,
+        ]);
+
+        return view('admin.preferences.chat', compact('conversation'));
+    }
 }
