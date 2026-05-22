@@ -64,11 +64,16 @@ class ScamTable
         $colId = 1; // 'Sr.' column
         
         if ($bulkSelectedRequired) $colId++;
-        $colId++; // Track Id
+
+        // Track Id
+        if ($isSubAdminPage || $this->getUserType($user) !== 'sales') {
+            $colId++;
+        }
+        
         $colId++; // Customer
         $colId++; // Scam Type
         $colId++; // Scam Amount
-
+        
         if ($show_scam_source) $colId++;
 
         $colId++; // Remark

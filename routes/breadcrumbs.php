@@ -61,6 +61,7 @@ Bc::resource(name: 'customers', pluralTitle: 'Customers', singularTitle: 'Custom
 Bc::resource(name: 'scams', pluralTitle: 'Scams', singularTitle: 'Scam');
 Bc::resource(name: 'customer-enquiries', pluralTitle: 'Customer Enquiries', singularTitle: 'Customer Enquiry');
 Bc::resource(name: 'scam-leads', pluralTitle: 'Scam Leads', singularTitle: 'Scam Lead');
+Bc::resource(name: 'lawyer', pluralTitle: 'Lawyer Leads', singularTitle: 'Lawyer Lead');
 Bc::resource(name: 'escalations', pluralTitle: 'Escalations', singularTitle: 'Escalation');
 Bc::resource(name: 'notifications', pluralTitle: 'Notifications', singularTitle: 'Notification');
 Bc::resource(name: 'user-activities', pluralTitle: 'User Activities', singularTitle: 'User Activity');

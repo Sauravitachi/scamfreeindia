@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ScamController;
 use App\Http\Controllers\Admin\ScamLeadController;
+use App\Http\Controllers\Admin\LawyerController;
 use App\Http\Controllers\Admin\ScamRegistrationAmountController;
 use App\Http\Controllers\Admin\ScamSourceController;
 use App\Http\Controllers\Admin\StateController;
@@ -110,6 +111,15 @@ $routes = function () {
             Route::post('bulk-transfer', 'bulkTransfer')->name('bulk-transfer');
         });
         Route::resource('scam-leads', ScamLeadController::class);
+
+        Route::prefix('lawyer')->as('lawyer.')->controller(LawyerController::class)->group(function () {
+            Route::post('{lawyer}/transfer', 'transfer')->name('transfer');
+            Route::get('{lawyer}/similar-leads', 'similarLeads')->name('similar-leads');
+            Route::delete('bulk-delete', 'bulkDelete')->name('bulk-delete');
+            Route::post('bulk-transfer', 'bulkTransfer')->name('bulk-transfer');
+        });
+        Route::resource('lawyer', LawyerController::class);
+        
         Route::prefix('escalations')->as('escalations.')->controller(EscalationController::class)->group(function () {
             Route::post('{escalation}/reject', 'reject')->name('reject');
             Route::post('{escalation}/close', 'close')->name('close');

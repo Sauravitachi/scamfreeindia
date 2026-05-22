@@ -68,6 +68,9 @@ class AdminSidebar extends Sidebar
             if ($this->user->hasPermissionTo(Permission::SCAM_LEAD_LIST->value)) {
                 $this->addSubmenu(title: 'Scam Leads', url: route('admin.scam-leads.index'));
             }
+            if ($this->user->hasPermissionTo(Permission::SCAM_LEAD_LIST->value)) {
+                $this->addSubmenu(title: 'Lawyer Leads', url: route('admin.lawyer.index'));
+            }
 
         if ($this->user->hasPermissionTo(Permission::CUSTOMER_ENQUIRY_LIST->value)) {
 

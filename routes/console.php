@@ -15,3 +15,6 @@ Schedule::call(function () {
     (new UnassignScamsWithStatus())->handle();
     (new UnassignEnquiriesWithStatus())->handle();
 })->dailyAt('00:00');
+
+Schedule::command('users:update-status inactive')->dailyAt('20:00');
+Schedule::command('users:update-status active')->dailyAt('09:30');

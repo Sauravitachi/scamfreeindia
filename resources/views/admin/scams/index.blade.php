@@ -175,7 +175,7 @@
                     'data' => [
                         ['title' => 'Sr.'],
                         ['title' => '', 'permit' => $pms->bulkSelectedRequired],
-                        ['title' => 'Track Id'],
+                        ['title' => 'Track Id', 'permit' => $user->userType() !== 'sales'],
                         ['title' => 'Customer'],
                         ['title' => 'Scam Type'],
                         ['title' => 'Scam Amount'],
@@ -513,18 +513,21 @@
                             render: DataTable.render.select(),
                             targets: 0
                         },
-                    @endif {
-                        data: 'track_id',
-                        name: 'track_id',
-                        render: function(data, type, row, meta) {
-                            const id = row['id'];
-                            const $elem = $(HtmlTag.span(data))
-                                .attr('role', 'button')
-                                .attr('onclick', `ScamDetailModule.open(${id})`)
-                                .addClass('text-decoration-underline');
-                            return $elem.outerHtml();
-                        }
-                    },
+                    @endif
+                    @if ($user->userType() !== 'sales')
+                        {
+                            data: 'track_id',
+                            name: 'track_id',
+                            render: function(data, type, row, meta) {
+                                const id = row['id'];
+                                const $elem = $(HtmlTag.span(data))
+                                    .attr('role', 'button')
+                                    .attr('onclick', `ScamDetailModule.open(${id})`)
+                                    .addClass('text-decoration-underline');
+                                return $elem.outerHtml();
+                            }
+                        },
+                    @endif
                     {
                         data: 'customer_info',
                         name: 'customer_info',
@@ -1361,3 +1364,4 @@
 
     </script>
 @endpush
+
