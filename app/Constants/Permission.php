@@ -198,4 +198,16 @@ enum Permission: string
     case APP_UI_DATA_CREATE = 'app_ui_data:create';
     case APP_UI_DATA_UPDATE = 'app_ui_data:update';
     case APP_UI_DATA_DELETE = 'app_ui_data:delete';
+
+    // Lawyer Management
+    case LAWYER_LIST = 'lawyer:list';
+    case LAWYER_CREATE = 'lawyer:create';
+    case LAWYER_UPDATE = 'lawyer:update';
+    case LAWYER_DELETE = 'lawyer:delete';
+
+    // Specialization Management
+    case SPECIALIZATION_LIST = 'specialization:list';
+    case SPECIALIZATION_CREATE = 'specialization:create';
+    case SPECIALIZATION_UPDATE = 'specialization:update';
+    case SPECIALIZATION_DELETE = 'specialization:delete';
 }
