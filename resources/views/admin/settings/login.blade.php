@@ -10,39 +10,64 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="">
-                        <div class="row mb-3">
-                            <div class="col-form-label">Panel Login</div>
-                            <div>
-                                <label class="form-check form-switch form-switch-lg fit-content">
-                                    <input class="form-check-input" id="panelLoginSwitch" type="checkbox" role="button"
-                                        @checked($settings->get('panel_login')?->value)>
-                                    <span class="form-check-label" id="panelLoginSwitch_text" role="button">
-                                    </span>
-                                </label>
+                    <form action="" onsubmit="event.preventDefault();">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="col-form-label fw-bold">Panel Login</div>
+                                <div>
+                                    <label class="form-check form-switch form-switch-lg fit-content">
+                                        <input class="form-check-input" id="panelLoginSwitch" type="checkbox" role="button"
+                                            @checked($settings->get('panel_login')?->value)>
+                                        <span class="form-check-label" id="panelLoginSwitch_text" role="button">
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
-                        <hr>
-
-                        <div class="row mb-3">
-                            <div class="col-form-label">IP Based Login</div>
-                            <div>
-                                <label class="form-check form-switch form-switch-lg fit-content">
-                                    <input class="form-check-input" id="ipLoginSwitch" type="checkbox" role="button"
-                                        @checked($settings->get('ip_login')?->value)>
-                                    <span class="form-check-label" id="ipLoginSwitch_text" role="button">
-                                    </span>
-                                </label>
+                            <div class="col-md-6 d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+                                <div class="alert alert-info py-2 px-3 mb-0 d-inline-flex align-items-center gap-2 small">
+                                    <i class="ti ti-info-circle"></i>
+                                    <span>Your Current IP: </span>
+                                    <strong class="cursor-pointer text-primary" id="copyCurrentIp" title="Click to copy">{{ request()->ip() }}</strong>
+                                </div>
                             </div>
                         </div>
 
-                        <div id="allowedIpsWrapper" class="row mb-3" style="display: none;">
-                            <div class="col-form-label">Allowed IPs (Comma separated)</div>
-                            <div>
-                                <textarea name="allowed_ips" id="allowedIps" class="form-control" rows="3" placeholder="e.g. 192.168.1.1, 127.0.0.1">{{ $settings->get('allowed_ips')?->value }}</textarea>
-                                <div class="mt-2 text-muted-sm">
-                                    Your current IP: <code id="currentIp" role="button" title="Click to copy">{{ request()->ip() }}</code>
-                                </div>
+                        <hr class="my-4">
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <h5 class="fw-semibold text-primary d-flex align-items-center">
+                                    <i class="ti ti-shield-lock me-2 fs-5"></i>
+                                    Role-Based IP Login Restrictions
+                                </h5>
+                                <p class="text-muted small">
+                                    Configure allowed IP addresses on a per-role basis. Leave a role's input blank to allow access from any IP address.
+                                </p>
                             </div>
+
+                            @foreach ($roles as $role)
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border border-light shadow-sm h-100">
+                                        <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <span class="fw-bold text-dark text-capitalize fs-6">{{ $role->name }}</span>
+                                                    <span class="badge bg-light text-secondary border px-2 py-1 small">Role ID: {{ $role->id }}</span>
+                                                </div>
+                                                <textarea
+                                                    class="form-control allowed-ips-textarea"
+                                                    data-role-id="{{ $role->id }}"
+                                                    rows="3"
+                                                    placeholder="e.g. 192.168.1.1, 49.36.10.2"
+                                                >{{ old('allowed_ips_' . $role->id, is_array($role->allowed_ips) ? implode(',', $role->allowed_ips) : $role->allowed_ips) }}</textarea>
+                                            </div>
+                                            <div class="form-text small text-muted mt-2">
+                                                <i class="ti ti-info-circle me-1"></i> Comma separated IPs
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </form>
                 </div>
@@ -78,6 +103,9 @@
                         },
                         success: (res) => {
                             togglePanelLoginSwitchText(status);
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('Panel Login status updated!');
+                            }
                         },
                         complete: () => overlayLoader.hide(),
                     });
@@ -85,67 +113,53 @@
                 });
             }
 
-            // IP Based Login Switch Handle
-            function ipLoginSwitchHandler() {
-                function toggleIpLoginSwitchText(status) {
-                    const on = `<span class="text-success">RESTRICTED: Login allowed only from specified IPs.</span>`;
-                    const off = `<span class="text-warning">Login is open to all IPs.</span>`;
-                    $('#ipLoginSwitch_text').html(status ? on : off);
-                    if (status) {
-                        $('#allowedIpsWrapper').slideDown();
-                    } else {
-                        $('#allowedIpsWrapper').slideUp();
-                    }
-                }
-                toggleIpLoginSwitchText(Number(settings?.ip_login?.value));
-                $('#ipLoginSwitch').on('change', function() {
-                    const status = $(this).prop('checked');
-                    $.ajax({
-                        url: api,
-                        method: 'POST',
-                        beforeSend: () => overlayLoader.show(),
-                        data: {
-                            ip_login: status ? 1 : 0
-                        },
-                        success: (res) => {
-                            toggleIpLoginSwitchText(status);
-                        },
-                        complete: () => overlayLoader.hide(),
-                    });
-
-                });
-            }
-
-            // IP Textarea handle
+            // Role IP Textarea handle
             function allowedIpsHandle() {
-                $('#allowedIps').on('change', function() {
-                    const value = $(this).val();
+                $('.allowed-ips-textarea').on('change', function() {
+                    const $textarea = $(this);
+                    const roleId = $textarea.data('role-id');
+                    const value = $textarea.val();
+
                     $.ajax({
                         url: api,
                         method: 'POST',
                         beforeSend: () => overlayLoader.show(),
                         data: {
+                            role_id: roleId,
                             allowed_ips: value
                         },
                         success: (res) => {
-                            // res handles
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('Allowed IPs updated successfully!');
+                            } else {
+                                alert('Allowed IPs updated successfully!');
+                            }
+                        },
+                        error: (xhr) => {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Failed to update allowed IPs.');
+                            } else {
+                                alert('Failed to update allowed IPs.');
+                            }
                         },
                         complete: () => overlayLoader.hide(),
                     });
-                })
-
-                $('#currentIp').on('click', function() {
-                    const ip = $(this).text();
-                    navigator.clipboard.writeText(ip);
-                    toastr.success('IP Copied to clipboard!');
                 });
             }
 
             // calling handlers
             panelLoginSwitchHandler();
-            ipLoginSwitchHandler();
             allowedIpsHandle();
 
+            $('#copyCurrentIp').on('click', function() {
+                const ip = $(this).text();
+                navigator.clipboard.writeText(ip);
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('IP Address copied to clipboard!');
+                } else {
+                    alert('IP Copied!');
+                }
+            });
 
         });
     </script>

@@ -13,32 +13,61 @@ class AdminAuthService extends Service
     public function canLogin(User|AuthUser $admin): LoginPermit
     {
         if ($admin->cannot(Permission::ADMIN_PANEL->value)) {
-            return new LoginPermit(canLogin: false, message: 'Account is not authorized to visit the dashboard.');
+            return new LoginPermit(
+                canLogin: false,
+                message: 'Account is not authorized to visit dashboard.'
+            );
         }
 
-        if (! setting(Setting::PANEL_LOGIN, false)) {
-            if (! $admin->hasPermissionTo(Permission::BYPASS_DISABLED_LOGIN)) {
-                return new LoginPermit(canLogin: false, message: 'Panel login is disabled right now. Try again later!');
+        if (!setting(Setting::PANEL_LOGIN, false)) {
+            if (!$admin->hasPermissionTo(
+                Permission::BYPASS_DISABLED_LOGIN
+            )) {
+
+                return new LoginPermit(
+                    canLogin:false,
+                    message:'Panel login disabled.'
+                );
             }
         }
 
-        if (setting(Setting::IP_LOGIN, false)) {
-            if (! $admin->hasPermissionTo(Permission::BYPASS_DISABLED_LOGIN)) {
-                $allowedIps = setting(Setting::ALLOWED_IPS, '');
-                $allowedIps = array_filter(array_map('trim', explode(',', $allowedIps)));
-                $currentIp = request()->ip();
+        // STATUS CHECK
+        if (!$admin->status) {
+            return new LoginPermit(
+                canLogin:false,
+                message:'Inactive Account!'
+            );
+        }
 
-                if (! in_array($currentIp, $allowedIps)) {
-                    return new LoginPermit(canLogin: false, message: "IP restricted! Your IP ($currentIp) is not allowed.");
-                }
+        // ROLE BASED IP CHECK
+        if ($admin->hasRole(\App\Constants\Role::SUPER_ADMIN->value)) {
+            return new LoginPermit(canLogin:true);
+        }
+
+        $currentIp = request()->ip();
+
+        foreach ($admin->roles as $role) {
+
+            if (!$role->allowed_ips) {
+                continue;
+            }
+
+            $allowedIps = explode(',', $role->allowed_ips);
+
+            $allowedIps = array_map(
+                'trim',
+                $allowedIps
+            );
+
+            if (!in_array($currentIp,$allowedIps)) {
+
+                return new LoginPermit(
+                    canLogin:false,
+                    message:"Login not allowed from this network."
+                );
             }
         }
 
-        // check of active/inactive status
-        if (! $admin->status) {
-            return new LoginPermit(canLogin: false, message: 'Inactive Account! Please contact administration.');
-        }
-
-        return new LoginPermit(canLogin: true);
+        return new LoginPermit(canLogin:true);
     }
 }
