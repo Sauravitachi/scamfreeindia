@@ -25,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\ScamRegistration::observe(\App\Observers\ScamRegistrationObserver::class);
         \App\Models\ScamLead::observe(\App\Observers\ScamLeadObserver::class);
         \App\Models\LawyerLead::observe(\App\Observers\ScamLeadObserver::class);
+        \App\Models\VltradingLead::observe(\App\Observers\ScamLeadObserver::class);
     }
 }
