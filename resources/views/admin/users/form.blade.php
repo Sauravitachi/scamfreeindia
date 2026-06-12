@@ -59,6 +59,10 @@
             </x-admin.select>
         </div>
 
+        <div class="col-12">
+            <x-admin.textarea name='quote' label="Quote" placeholder="Enter user quote" :value="$user?->quote" />
+        </div>
+
     </div>
 
     <div class="text-end">
