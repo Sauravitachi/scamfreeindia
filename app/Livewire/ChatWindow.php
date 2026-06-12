@@ -22,6 +22,7 @@ class ChatWindow extends Component
     
     public $users = [];
     public $selectedUserId = null;
+    public ?User $selectedUser = null;
     public string $search = '';
 
     public function mount()
@@ -88,6 +89,7 @@ class ChatWindow extends Component
                 'last_message_date' => $lastMessage ? $lastMessage->created_at->diffForHumans(null, true, true) : null,
                 'has_conversation' => $conv ? true : false,
                 'unread_count' => $unreadCount,
+                'profile_avatar' => $user->profile_avatar,
             ];
         }
 
@@ -102,6 +104,7 @@ class ChatWindow extends Component
     public function selectUser($userId)
     {
         $this->selectedUserId = $userId;
+        $this->selectedUser = User::find($userId);
         $currentUser = Auth::user() ?? Auth::guard('admin')->user();
         
         if (!$currentUser) {
@@ -203,6 +206,7 @@ class ChatWindow extends Component
             'type' => $type,
             'roomName' => $roomName,
             'callerName' => $user->name,
+            'callerAvatar' => $user->profile_avatar,
             'conversation_id' => $this->conversation->id,
             'action' => 'offer'
         ];
